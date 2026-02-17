@@ -5,7 +5,6 @@ import unittest
 try:
     from python_demos.ising_four_models import (
         IsingParams,
-        initial_k_distribution,
         model_1_heatmap_trajectory,
         model_1_single_spin,
         model_2_heatmap_trajectory,
@@ -15,12 +14,10 @@ try:
         model_4_full_state_space,
         model_4_heatmap_trajectory,
         probs_to_state_distribution,
-        random_initial_probabilities,
     )
 except ModuleNotFoundError:
     from ising_four_models import (  # type: ignore
         IsingParams,
-        initial_k_distribution,
         model_1_heatmap_trajectory,
         model_1_single_spin,
         model_2_heatmap_trajectory,
@@ -30,7 +27,6 @@ except ModuleNotFoundError:
         model_4_full_state_space,
         model_4_heatmap_trajectory,
         probs_to_state_distribution,
-        random_initial_probabilities,
     )
 
 
@@ -67,36 +63,27 @@ class IsingDemoTests(unittest.TestCase):
         for dist in traj:
             self.assertAlmostEqual(sum(dist.values()), 1.0)
 
-    def test_random_initial_probabilities_reproducible(self):
-        p1 = random_initial_probabilities(4, seed=11)
-        p2 = random_initial_probabilities(4, seed=11)
-        self.assertEqual(p1, p2)
-
-    def test_initial_k_distribution_sums_to_one(self):
-        kd = initial_k_distribution([0.2, 0.7, 0.5, 0.1])
-        self.assertAlmostEqual(sum(kd.values()), 1.0)
-
     def test_model_1_heatmap_trajectory_shape(self):
         params = IsingParams()
-        traj = model_1_heatmap_trajectory(initial_probs=[0.2, 0.7, 0.5, 0.1], params=params, steps=2, n_cols=2)
+        traj = model_1_heatmap_trajectory(params=params, steps=2)
         self.assertEqual(len(traj), 3)
         for frame in traj:
-            self.assertEqual(len(frame), 2)
+            self.assertEqual(len(frame), 1)
             self.assertEqual(len(frame[0]), 2)
+            for v in frame[0]:
+                self.assertGreaterEqual(v, -1.0)
+                self.assertLessEqual(v, 1.0)
 
     def test_model_2_heatmap_trajectory_shape(self):
         params = IsingParams()
-        traj = model_2_heatmap_trajectory(
-            n_spins=4,
-            params=params,
-            steps=2,
-            initial_probs=[0.2, 0.7, 0.5, 0.1],
-            n_cols=2,
-        )
+        traj = model_2_heatmap_trajectory(n_spins=6, params=params, steps=2)
         self.assertEqual(len(traj), 3)
         for frame in traj:
-            self.assertEqual(len(frame), 2)
-            self.assertEqual(len(frame[0]), 2)
+            self.assertEqual(len(frame), 1)
+            self.assertEqual(len(frame[0]), 7)
+            for v in frame[0]:
+                self.assertGreaterEqual(v, -1.0)
+                self.assertLessEqual(v, 1.0)
 
     def test_model_3_heatmap_trajectory_shape(self):
         params = IsingParams()
@@ -118,7 +105,6 @@ class IsingDemoTests(unittest.TestCase):
         for frame in traj:
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
-
 
 if __name__ == "__main__":
     unittest.main()

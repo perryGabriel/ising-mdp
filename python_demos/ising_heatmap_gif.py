@@ -13,8 +13,6 @@ try:
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
-        random_initial_probabilities,
-        sample_state_from_probabilities,
     )
 except ModuleNotFoundError:
     from ising_four_models import (  # type: ignore
@@ -23,8 +21,6 @@ except ModuleNotFoundError:
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
-        random_initial_probabilities,
-        sample_state_from_probabilities,
     )
 
 
@@ -39,9 +35,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--coupling", type=float, default=0.8)
     parser.add_argument("--field", type=float, default=0.1)
     parser.add_argument("--mixing", type=float, default=0.2, help="Model-3 mixing coefficient")
-    parser.add_argument("--rows", type=int, default=2, help="Lattice rows (all models)")
-    parser.add_argument("--cols", type=int, default=2, help="Lattice cols (all models)")
-    parser.add_argument("--seed", type=int, default=7, help="Seed for shared random initialization")
+    parser.add_argument("--mean-field-spins", type=int, default=12)
+    parser.add_argument(
+        "--exp-atoms",
+        type=int,
+        default=4,
+        help="Atoms for model-4 trajectory (use 4 for a 2x2 heatmap).",
+    )
     return parser
 
 
@@ -59,43 +59,23 @@ def main() -> None:
     args = build_parser().parse_args()
     params = IsingParams(temperature=args.temperature, coupling=args.coupling, field=args.field)
 
-    if args.rows <= 0 or args.cols <= 0:
-        raise SystemExit("rows and cols must be positive integers")
+    n_atoms = max(1, min(args.exp_atoms, 4))
+    start = tuple([1] * (n_atoms // 2) + [-1] * (n_atoms - n_atoms // 2))
+    edges = [(i, (i + 1) % n_atoms) for i in range(n_atoms)] if n_atoms > 1 else []
 
-    n_atoms = args.rows * args.cols
-    if n_atoms != 4:
-        raise SystemExit(
-            "Current model set alignment supports 2x2 (4 atoms) so all four models share the same layout. "
-            "Please use --rows 2 --cols 2."
-        )
-
-    initial_probs = random_initial_probabilities(n_atoms=n_atoms, seed=args.seed)
-    start = sample_state_from_probabilities(initial_probs, seed=args.seed)
-    edges = [(0, 1), (0, 2), (1, 3), (2, 3)]
-
-    model1_frames = model_1_heatmap_trajectory(
-        initial_probs=initial_probs, params=params, steps=args.steps, n_cols=args.cols
-    )
+    model1_frames = model_1_heatmap_trajectory(params=params, steps=args.steps)
     model2_frames = model_2_heatmap_trajectory(
-        n_spins=n_atoms,
-        params=params,
-        steps=args.steps,
-        initial_probs=initial_probs,
-        n_cols=args.cols,
+        n_spins=max(2, args.mean_field_spins), params=params, steps=args.steps
     )
     model3_frames = model_3_heatmap_trajectory(
-        initial_probs=initial_probs,
+        initial_probs=[0.8, 0.2, 0.5, 0.1],
         params=params,
         steps=args.steps,
         mixing=args.mixing,
-        n_cols=args.cols,
+        n_cols=2,
     )
     model4_frames = model_4_heatmap_trajectory(
-        start=start,
-        params=params,
-        edges=edges,
-        steps=args.steps,
-        n_cols=args.cols,
+        start=start, params=params, edges=edges, steps=args.steps, n_cols=2
     )
 
     n_frames = min(len(model1_frames), len(model2_frames), len(model3_frames), len(model4_frames))
@@ -104,31 +84,34 @@ def main() -> None:
     fig.suptitle("Ising model heatmaps over time", fontsize=12)
     ax = axes.ravel()
 
-    im1 = ax[0].imshow(model1_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", animated=True)
-    im2 = ax[1].imshow(model2_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", animated=True)
+    im1 = ax[0].imshow(model1_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="auto", animated=True)
+    im2 = ax[1].imshow(model2_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="auto", animated=True)
     im3 = ax[2].imshow(model3_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", animated=True)
     im4 = ax[3].imshow(model4_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", animated=True)
 
     ax[0].set_title("Model 1: Single-spin chain")
-    ax[1].set_title("Model 2: Mean-field")
+    ax[1].set_title("Model 2: Mean-field K")
     ax[2].set_title("Model 3: Local probs")
-    ax[3].set_title("Model 4: Full state space")
+    ax[3].set_title(f"Model 4: Full state space (N={n_atoms})")
 
-    for a in ax:
-        a.set_xticks([])
-        a.set_yticks([])
+    ax[0].set_yticks([])
+    ax[0].set_xticks([0, 1], ["P(↓)", "P(↑)"])
+    ax[1].set_yticks([])
+    ax[1].set_xlabel("K = #up")
+    ax[2].set_xticks([])
+    ax[2].set_yticks([])
+    ax[3].set_xticks([])
+    ax[3].set_yticks([])
 
     cbar = fig.colorbar(im4, ax=ax.tolist(), fraction=0.03, pad=0.02)
-    cbar.set_label("Expected spin / polarization in [-1, 1]")
+    cbar.set_label("Scaled value in [-1, 1]")
 
-    init_text = ", ".join(f"{p:.2f}" for p in initial_probs)
     param_text = fig.text(
         0.5,
         0.01,
         (
             f"T={args.temperature:.3g} | J={args.coupling:.3g} | h={args.field:.3g} "
-            f"| mixing={args.mixing:.3g} | layout={args.rows}x{args.cols} | seed={args.seed} "
-            f"| init_probs=[{init_text}]"
+            f"| mixing={args.mixing:.3g} | mean_field_spins={args.mean_field_spins}"
         ),
         ha="center",
     )

@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Core simulation and visualization helpers for four Ising-inspired models."""
+"""Core simulation and visualization helpers for four Ising-inspired models.
+
+This module includes:
+1) A single-spin two-state chain.
+2) A mean-field chain over K=#(up spins).
+3) A local-neighborhood probability model on a 2x2 lattice.
+4) A full exponential-state Gibbs model (recommended with N<=4).
+
+It also exposes convenience trajectory builders for terminal demos and heatmaps.
+"""
 
 from __future__ import annotations
 
@@ -89,34 +98,6 @@ def expected_site_magnetization(dist: Distribution) -> List[float]:
     return [sum(state[i] * p for state, p in dist.items()) for i in range(n)]
 
 
-def random_initial_probabilities(n_atoms: int, seed: int = 7) -> List[float]:
-    """Generate reproducible per-site up-spin probabilities in [0, 1]."""
-
-    rng = random.Random(seed)
-    return [rng.random() for _ in range(n_atoms)]
-
-
-def sample_state_from_probabilities(initial_probs: Sequence[float], seed: int = 7) -> State:
-    """Sample a concrete spin state from per-site up-spin probabilities."""
-
-    rng = random.Random(seed)
-    return tuple(1 if rng.random() <= p else -1 for p in initial_probs)
-
-
-def initial_k_distribution(initial_probs: Sequence[float]) -> Dict[int, float]:
-    """Compute P(K=k) from independent Bernoulli site probabilities."""
-
-    dist: Dict[int, float] = {0: 1.0}
-    for p in initial_probs:
-        nxt: Dict[int, float] = defaultdict(float)
-        for k, mass in dist.items():
-            nxt[k] += mass * (1.0 - p)
-            nxt[k + 1] += mass * p
-        dist = dict(nxt)
-    total = sum(dist.values())
-    return {k: v / total for k, v in dist.items()}
-
-
 # ---------------------------
 # Model 1: single-spin chain
 # ---------------------------
@@ -131,21 +112,29 @@ def model_1_single_spin(params: IsingParams) -> Dict[State, Distribution]:
     }
 
 
-def model_1_heatmap_trajectory(
-    initial_probs: Sequence[float], params: IsingParams, steps: int, n_cols: int = 2
-) -> List[List[List[float]]]:
-    """Return model-1 lattice heatmap frames from shared site initialization.
+def model_1_heatmap_trajectory(params: IsingParams, steps: int) -> List[List[List[float]]]:
+    """Return a 1x2 heatmap trajectory for model 1.
 
-    Each site follows the same independent single-spin chain dynamics.
+    Columns are [P(↓), P(↑)] mapped to [-1,1] by `2p-1`.
     """
 
     trans = model_1_single_spin(params)
-    probs = list(initial_probs)
-    frames: List[List[List[float]]] = [spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols)]
-    p_up_after = trans[(1,)][(1,)]
+    dist: Distribution = {(1,): 1.0}
+    frames: List[List[List[float]]] = []
+
+    def to_row(d: Distribution) -> List[List[float]]:
+        p_up = d.get((1,), 0.0)
+        p_down = d.get((-1,), 0.0)
+        return [[2.0 * p_down - 1.0, 2.0 * p_up - 1.0]]
+
+    frames.append(to_row(dist))
     for _ in range(steps):
-        probs = [p * p_up_after + (1.0 - p) * p_up_after for p in probs]
-        frames.append(spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols))
+        next_dist: Distribution = defaultdict(float)
+        for state, p_state in dist.items():
+            for nxt, p_next in trans[state].items():
+                next_dist[nxt] += p_state * p_next
+        dist = normalize(next_dist)
+        frames.append(to_row(dist))
     return frames
 
 
@@ -182,30 +171,18 @@ def model_2_mean_field(
     return {k: v / total for k, v in next_dist.items()}
 
 
-def model_2_heatmap_trajectory(
-    n_spins: int,
-    params: IsingParams,
-    steps: int,
-    initial_probs: Sequence[float],
-    n_cols: int = 2,
-) -> List[List[List[float]]]:
-    """Return model-2 heatmap frames mapped onto the shared lattice arrangement.
+def model_2_heatmap_trajectory(n_spins: int, params: IsingParams, steps: int) -> List[List[List[float]]]:
+    """Return a 1x(n_spins+1) heat-strip trajectory over K states."""
 
-    Model 2 tracks only K=#up. We convert each step to one expected magnetization
-    value and fill all sites with it, so layout matches other panels.
-    """
+    k_dist: Dict[int, float] = {n_spins // 2: 1.0}
 
-    k_dist = initial_k_distribution(initial_probs)
+    def to_row(dist: Dict[int, float]) -> List[List[float]]:
+        return [[2.0 * dist.get(k, 0.0) - 1.0 for k in range(n_spins + 1)]]
 
-    def mean_magnetization(dist: Dict[int, float]) -> float:
-        exp_k = sum(k * p for k, p in dist.items())
-        return (2.0 * exp_k / n_spins) - 1.0
-
-    frames: List[List[List[float]]] = []
-    frames.append(spins_to_grid([mean_magnetization(k_dist)] * n_spins, n_cols=n_cols))
+    frames: List[List[List[float]]] = [to_row(k_dist)]
     for _ in range(steps):
         k_dist = model_2_mean_field(n_spins=n_spins, params=params, current_k_dist=k_dist)
-        frames.append(spins_to_grid([mean_magnetization(k_dist)] * n_spins, n_cols=n_cols))
+        frames.append(to_row(k_dist))
     return frames
 
 
@@ -228,13 +205,8 @@ def model_3_local_probabilities(
     current_probs: Sequence[float],
     params: IsingParams,
     mixing: float = 0.2,
-    n_cols: int = 2,
 ) -> List[float]:
     """Advance per-site up-spin probabilities for the local model by one step."""
-
-    # Local-neighborhood approximation currently implemented for 2x2 layout.
-    if len(current_probs) != 4 or n_cols != 2:
-        raise ValueError("Model 3 currently supports a 2x2 lattice (4 atoms) only.")
 
     beta = 1.0 / max(params.temperature, 1e-6)
     next_probs: List[float] = []
@@ -272,7 +244,7 @@ def model_3_heatmap_trajectory(
     probs = list(initial_probs)
     frames: List[List[List[float]]] = [spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols)]
     for _ in range(steps):
-        probs = model_3_local_probabilities(probs, params=params, mixing=mixing, n_cols=n_cols)
+        probs = model_3_local_probabilities(probs, params=params, mixing=mixing)
         frames.append(spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols))
     return frames
 
