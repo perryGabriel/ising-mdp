@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ising-mdp-demos"
+version = "0.1.0"
+description = "Ising-inspired MDP simulation demos and heatmap visualizations"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Ising MDP contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.8", "pillow>=10.0"]
+
+[project.scripts]
+ising-four-models = "python_demos.ising_four_models:demo_entry"
+ising-heatmap-gif = "python_demos.ising_heatmap_gif:main"
+
+[tool.setuptools]
+packages = ["python_demos"]

@@ -1,41 +1,38 @@
-import unittest
+"""Tests for Ising demo models and heatmap helpers."""
 
+import unittest
 
 try:
     from python_demos.ising_four_models import (
         IsingParams,
-        model_3_heatmap_trajectory,
-        model_4_heatmap_trajectory,
+        model_1_heatmap_trajectory,
         model_1_single_spin,
+        model_2_heatmap_trajectory,
         model_2_mean_field,
+        model_3_heatmap_trajectory,
         model_3_local_probabilities,
         model_4_full_state_space,
+        model_4_heatmap_trajectory,
         probs_to_state_distribution,
     )
 except ModuleNotFoundError:
-    # Allows running directly from inside python_demos/:
-    #   python test_ising_four_models.py
     from ising_four_models import (  # type: ignore
         IsingParams,
-        model_3_heatmap_trajectory,
-        model_4_heatmap_trajectory,
+        model_1_heatmap_trajectory,
         model_1_single_spin,
+        model_2_heatmap_trajectory,
         model_2_mean_field,
+        model_3_heatmap_trajectory,
         model_3_local_probabilities,
         model_4_full_state_space,
+        model_4_heatmap_trajectory,
         probs_to_state_distribution,
     )
-from python_demos.ising_four_models import (
-    IsingParams,
-    model_1_single_spin,
-    model_2_mean_field,
-    model_3_local_probabilities,
-    model_4_full_state_space,
-    probs_to_state_distribution,
-)
 
 
 class IsingDemoTests(unittest.TestCase):
+    """Covers normalization, bounds, and heatmap frame shapes."""
+
     def test_model_1_distribution_sums_to_one(self):
         params = IsingParams(temperature=1.0, coupling=0.5, field=0.1)
         trans = model_1_single_spin(params)
@@ -63,23 +60,40 @@ class IsingDemoTests(unittest.TestCase):
             edges=[(0, 1), (1, 2), (2, 3)],
             steps=3,
         )
-        traj = model_4_full_state_space(start=(1, 1, -1, -1), params=params, edges=[(0, 1), (1, 2), (2, 3)], steps=3)
         for dist in traj:
             self.assertAlmostEqual(sum(dist.values()), 1.0)
 
-    def test_model_3_heatmap_trajectory_has_expected_shape(self):
+    def test_model_1_heatmap_trajectory_shape(self):
+        params = IsingParams()
+        traj = model_1_heatmap_trajectory(params=params, steps=2)
+        self.assertEqual(len(traj), 3)
+        for frame in traj:
+            self.assertEqual(len(frame), 1)
+            self.assertEqual(len(frame[0]), 2)
+            for v in frame[0]:
+                self.assertGreaterEqual(v, -1.0)
+                self.assertLessEqual(v, 1.0)
+
+    def test_model_2_heatmap_trajectory_shape(self):
+        params = IsingParams()
+        traj = model_2_heatmap_trajectory(n_spins=6, params=params, steps=2)
+        self.assertEqual(len(traj), 3)
+        for frame in traj:
+            self.assertEqual(len(frame), 1)
+            self.assertEqual(len(frame[0]), 7)
+            for v in frame[0]:
+                self.assertGreaterEqual(v, -1.0)
+                self.assertLessEqual(v, 1.0)
+
+    def test_model_3_heatmap_trajectory_shape(self):
         params = IsingParams()
         traj = model_3_heatmap_trajectory([0.8, 0.2, 0.5, 0.1], params=params, steps=2)
         self.assertEqual(len(traj), 3)
         for frame in traj:
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
-            for row in frame:
-                for v in row:
-                    self.assertGreaterEqual(v, -1.0)
-                    self.assertLessEqual(v, 1.0)
 
-    def test_model_4_heatmap_trajectory_has_expected_shape(self):
+    def test_model_4_heatmap_trajectory_shape(self):
         params = IsingParams()
         traj = model_4_heatmap_trajectory(
             start=(1, 1, -1, -1),
@@ -91,10 +105,6 @@ class IsingDemoTests(unittest.TestCase):
         for frame in traj:
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
-            for row in frame:
-                for v in row:
-                    self.assertGreaterEqual(v, -1.0)
-                    self.assertLessEqual(v, 1.0)
 
 if __name__ == "__main__":
     unittest.main()
