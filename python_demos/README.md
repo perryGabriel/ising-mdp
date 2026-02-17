@@ -20,3 +20,40 @@ Useful options:
 - `--seed`
 
 The script prints top probabilities at each step and samples one next state so you can visualize likely outcomes in the terminal.
+
+## Heatmap GIF animation
+
+Yes — a GIF is a great fit here. The repo now includes `ising_heatmap_gif.py` to animate expected magnetization heatmaps over time for model 3 and model 4.
+
+Install plotting deps:
+
+```bash
+pip install matplotlib pillow
+```
+
+Generate a GIF:
+
+```bash
+python python_demos/ising_heatmap_gif.py --steps 20 --fps 4 --output python_demos/ising_heatmaps.gif
+```
+
+Notes:
+
+- Model 3 is shown as a 2x2 local-probability heatmap.
+- Model 4 is shown as a 2x2 expected-spin heatmap when `--exp-atoms 4` (default).
+- Color scale is expected spin / magnetization in `[-1, 1]`.
+
+
+## Testing
+
+Run from repo root:
+
+```bash
+python -m unittest python_demos/test_ising_four_models.py
+```
+
+Or from inside `python_demos/`:
+
+```bash
+python test_ising_four_models.py
+```
