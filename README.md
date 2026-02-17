@@ -25,18 +25,30 @@ Run terminal simulations:
 ising-four-models --steps 4 --exp-atoms 4
 ```
 
+<<<<<<< HEAD
+=======
 or
 
 ```bash
 python python_demos/ising_four_models.py --steps 4 --exp-atoms 4
 ```
 
+>>>>>>> main
 Run tests:
 
 ```bash
 python -m unittest python_demos/test_ising_four_models.py
 ```
 
+<<<<<<< HEAD
+Generate animated heatmaps (all four models, same layout/init):
+
+```bash
+ising-heatmap-gif --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_demos/ising_heatmaps.gif
+```
+
+The GIF includes all four models in the same 2x2 atom arrangement with shared initialization.
+=======
 Generate animated heatmaps (all four models):
 
 ```bash
@@ -75,3 +87,4 @@ The Vite build output is written to `docs/`. Commit that folder, then in GitHub 
 - **Folder**: `/docs`
 
 The app renders four independent simulation panels, each with isolated controls and initial-state tuning.
+>>>>>>> main
