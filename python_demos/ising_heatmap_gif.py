@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import random
 from pathlib import Path
 
 try:
@@ -36,11 +37,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--field", type=float, default=0.1)
     parser.add_argument("--mixing", type=float, default=0.2, help="Model-3 mixing coefficient")
     parser.add_argument("--mean-field-spins", type=int, default=12)
+    parser.add_argument("--rows", type=int, default=None, help="Lattice rows for models 3 and 4")
+    parser.add_argument("--cols", type=int, default=None, help="Lattice columns for models 3 and 4")
+    parser.add_argument("--seed", type=int, default=7, help="Random seed for shared lattice initialization")
     parser.add_argument(
         "--exp-atoms",
         type=int,
         default=4,
-        help="Atoms for model-4 trajectory (use 4 for a 2x2 heatmap).",
+        help="Deprecated fallback for model-4 atoms when rows*cols is not set.",
     )
     return parser
 
@@ -59,8 +63,25 @@ def main() -> None:
     args = build_parser().parse_args()
     params = IsingParams(temperature=args.temperature, coupling=args.coupling, field=args.field)
 
-    n_atoms = max(1, min(args.exp_atoms, 4))
-    start = tuple([1] * (n_atoms // 2) + [-1] * (n_atoms - n_atoms // 2))
+    if (args.rows is None) != (args.cols is None):
+        raise SystemExit("Provide both --rows and --cols, or provide neither.")
+
+    if args.rows is None:
+        n_atoms = max(1, min(args.exp_atoms, 4))
+        args.cols = 2 if n_atoms > 1 else 1
+        args.rows = (n_atoms + args.cols - 1) // args.cols
+    else:
+        if args.rows <= 0 or args.cols <= 0:
+            raise SystemExit("--rows and --cols must both be positive integers.")
+        n_atoms = args.rows * args.cols
+    if n_atoms > 4:
+        raise SystemExit(
+            "Model 4 currently supports up to 4 atoms for tractability; choose rows*cols <= 4."
+        )
+
+    rng = random.Random(args.seed)
+    start = tuple(rng.choice([-1, 1]) for _ in range(n_atoms))
+    initial_probs = [1.0 if spin == 1 else 0.0 for spin in start]
     edges = [(i, (i + 1) % n_atoms) for i in range(n_atoms)] if n_atoms > 1 else []
 
     model1_frames = model_1_heatmap_trajectory(params=params, steps=args.steps)
@@ -68,14 +89,14 @@ def main() -> None:
         n_spins=max(2, args.mean_field_spins), params=params, steps=args.steps
     )
     model3_frames = model_3_heatmap_trajectory(
-        initial_probs=[0.8, 0.2, 0.5, 0.1],
+        initial_probs=initial_probs,
         params=params,
         steps=args.steps,
         mixing=args.mixing,
-        n_cols=2,
+        n_cols=args.cols,
     )
     model4_frames = model_4_heatmap_trajectory(
-        start=start, params=params, edges=edges, steps=args.steps, n_cols=2
+        start=start, params=params, edges=edges, steps=args.steps, n_cols=args.cols
     )
 
     n_frames = min(len(model1_frames), len(model2_frames), len(model3_frames), len(model4_frames))
@@ -92,7 +113,7 @@ def main() -> None:
     ax[0].set_title("Model 1: Single-spin chain")
     ax[1].set_title("Model 2: Mean-field K")
     ax[2].set_title("Model 3: Local probs")
-    ax[3].set_title(f"Model 4: Full state space (N={n_atoms})")
+    ax[3].set_title(f"Model 4: Full state space ({args.rows}x{args.cols}, N={n_atoms})")
 
     ax[0].set_yticks([])
     ax[0].set_xticks([0, 1], ["P(↓)", "P(↑)"])
@@ -111,7 +132,8 @@ def main() -> None:
         0.01,
         (
             f"T={args.temperature:.3g} | J={args.coupling:.3g} | h={args.field:.3g} "
-            f"| mixing={args.mixing:.3g} | mean_field_spins={args.mean_field_spins}"
+            f"| mixing={args.mixing:.3g} | mean_field_spins={args.mean_field_spins} "
+            f"| lattice={args.rows}x{args.cols} | seed={args.seed}"
         ),
         ha="center",
     )

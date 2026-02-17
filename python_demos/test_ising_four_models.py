@@ -3,6 +3,11 @@
 import unittest
 
 try:
+    from python_demos.ising_heatmap_gif import build_parser as build_gif_parser
+except ModuleNotFoundError:
+    from ising_heatmap_gif import build_parser as build_gif_parser  # type: ignore
+
+try:
     from python_demos.ising_four_models import (
         IsingParams,
         model_1_heatmap_trajectory,
@@ -105,6 +110,13 @@ class IsingDemoTests(unittest.TestCase):
         for frame in traj:
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
+
+    def test_heatmap_gif_parser_accepts_rows_cols_seed(self):
+        parser = build_gif_parser()
+        args = parser.parse_args(["--rows", "2", "--cols", "2", "--seed", "7"])
+        self.assertEqual(args.rows, 2)
+        self.assertEqual(args.cols, 2)
+        self.assertEqual(args.seed, 7)
 
 if __name__ == "__main__":
     unittest.main()

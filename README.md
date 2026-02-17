@@ -31,13 +31,13 @@ Run tests:
 python -m unittest python_demos/test_ising_four_models.py
 ```
 
-Generate animated heatmaps (all four models, same layout/init):
+Generate animated heatmaps (all four models, with seeded shared lattice init for models 3/4):
 
 ```bash
 python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_demos/ising_heatmaps.gif
 ```
 
-The GIF includes all four models in the same 2x2 atom arrangement with shared initialization:
+The GIF includes all four models, and models 3 and 4 share the same seeded 2x2 lattice initialization:
 
 1. Model 1 single-spin chain,
 2. Model 2 mean-field over `K=#up`,
