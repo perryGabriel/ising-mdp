@@ -32,15 +32,15 @@ ising-four-models --steps 4 --exp-atoms 4
 Create an animated GIF with **all four models** and a parameter key overlay:
 
 ```bash
-ising-heatmap-gif --steps 20 --fps 4 --output python_demos/ising_heatmaps.gif
+ising-heatmap-gif --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_demos/ising_heatmaps.gif
 ```
 
 The animation panels are:
 
 - **Model 1**: 1x2 strip for `[P(↓), P(↑)]`.
 - **Model 2**: 1x(`N+1`) strip over `K=#up`.
-- **Model 3**: 2x2 expected-spin heatmap.
-- **Model 4**: 2x2 expected-spin heatmap for `N=4`.
+- **Model 3**: `rows`x`cols` expected-spin heatmap.
+- **Model 4**: `rows`x`cols` expected-spin heatmap for `N=rows*cols` (currently `N<=4`).
 
 Color scale values are in `[-1, 1]`.
 
@@ -57,3 +57,5 @@ From inside `python_demos/`:
 ```bash
 python test_ising_four_models.py
 ```
+
+Models 3 and 4 use the same seeded random lattice initialization (`--seed`).
