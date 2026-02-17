@@ -20,6 +20,7 @@ Useful options:
 - `--seed`
 
 The script prints top probabilities at each step and samples one next state so you can visualize likely outcomes in the terminal.
+<<<<<<< HEAD
 
 
 ## Testing
@@ -35,3 +36,5 @@ Or from inside `python_demos/`:
 ```bash
 python test_ising_four_models.py
 ```
+=======
+>>>>>>> main

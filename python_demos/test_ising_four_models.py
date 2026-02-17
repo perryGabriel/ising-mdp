@@ -1,5 +1,6 @@
 import unittest
 
+<<<<<<< HEAD
 try:
     from python_demos.ising_four_models import (
         IsingParams,
@@ -20,6 +21,16 @@ except ModuleNotFoundError:
         model_4_full_state_space,
         probs_to_state_distribution,
     )
+=======
+from python_demos.ising_four_models import (
+    IsingParams,
+    model_1_single_spin,
+    model_2_mean_field,
+    model_3_local_probabilities,
+    model_4_full_state_space,
+    probs_to_state_distribution,
+)
+>>>>>>> main
 
 
 class IsingDemoTests(unittest.TestCase):
@@ -44,12 +55,16 @@ class IsingDemoTests(unittest.TestCase):
 
     def test_model_4_distribution_sums_to_one_each_step(self):
         params = IsingParams(temperature=1.2, coupling=0.8, field=0.0)
+<<<<<<< HEAD
         traj = model_4_full_state_space(
             start=(1, 1, -1, -1),
             params=params,
             edges=[(0, 1), (1, 2), (2, 3)],
             steps=3,
         )
+=======
+        traj = model_4_full_state_space(start=(1, 1, -1, -1), params=params, edges=[(0, 1), (1, 2), (2, 3)], steps=3)
+>>>>>>> main
         for dist in traj:
             self.assertAlmostEqual(sum(dist.values()), 1.0)
 
