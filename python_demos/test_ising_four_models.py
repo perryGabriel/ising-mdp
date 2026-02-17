@@ -1,9 +1,11 @@
 import unittest
 
-<<<<<<< HEAD
+
 try:
     from python_demos.ising_four_models import (
         IsingParams,
+        model_3_heatmap_trajectory,
+        model_4_heatmap_trajectory,
         model_1_single_spin,
         model_2_mean_field,
         model_3_local_probabilities,
@@ -15,13 +17,14 @@ except ModuleNotFoundError:
     #   python test_ising_four_models.py
     from ising_four_models import (  # type: ignore
         IsingParams,
+        model_3_heatmap_trajectory,
+        model_4_heatmap_trajectory,
         model_1_single_spin,
         model_2_mean_field,
         model_3_local_probabilities,
         model_4_full_state_space,
         probs_to_state_distribution,
     )
-=======
 from python_demos.ising_four_models import (
     IsingParams,
     model_1_single_spin,
@@ -30,7 +33,6 @@ from python_demos.ising_four_models import (
     model_4_full_state_space,
     probs_to_state_distribution,
 )
->>>>>>> main
 
 
 class IsingDemoTests(unittest.TestCase):
@@ -55,19 +57,44 @@ class IsingDemoTests(unittest.TestCase):
 
     def test_model_4_distribution_sums_to_one_each_step(self):
         params = IsingParams(temperature=1.2, coupling=0.8, field=0.0)
-<<<<<<< HEAD
         traj = model_4_full_state_space(
             start=(1, 1, -1, -1),
             params=params,
             edges=[(0, 1), (1, 2), (2, 3)],
             steps=3,
         )
-=======
         traj = model_4_full_state_space(start=(1, 1, -1, -1), params=params, edges=[(0, 1), (1, 2), (2, 3)], steps=3)
->>>>>>> main
         for dist in traj:
             self.assertAlmostEqual(sum(dist.values()), 1.0)
 
+    def test_model_3_heatmap_trajectory_has_expected_shape(self):
+        params = IsingParams()
+        traj = model_3_heatmap_trajectory([0.8, 0.2, 0.5, 0.1], params=params, steps=2)
+        self.assertEqual(len(traj), 3)
+        for frame in traj:
+            self.assertEqual(len(frame), 2)
+            self.assertEqual(len(frame[0]), 2)
+            for row in frame:
+                for v in row:
+                    self.assertGreaterEqual(v, -1.0)
+                    self.assertLessEqual(v, 1.0)
+
+    def test_model_4_heatmap_trajectory_has_expected_shape(self):
+        params = IsingParams()
+        traj = model_4_heatmap_trajectory(
+            start=(1, 1, -1, -1),
+            params=params,
+            edges=[(0, 1), (1, 2), (2, 3), (3, 0)],
+            steps=2,
+        )
+        self.assertEqual(len(traj), 3)
+        for frame in traj:
+            self.assertEqual(len(frame), 2)
+            self.assertEqual(len(frame[0]), 2)
+            for row in frame:
+                for v in row:
+                    self.assertGreaterEqual(v, -1.0)
+                    self.assertLessEqual(v, 1.0)
 
 if __name__ == "__main__":
     unittest.main()

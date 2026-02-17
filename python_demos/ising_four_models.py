@@ -13,7 +13,7 @@ import math
 import random
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 Spin = int  # +1 or -1
 State = Tuple[Spin, ...]
@@ -64,6 +64,20 @@ def render_lattice(state: State, n_cols: int = 2) -> str:
     chars = ["↑" if s == 1 else "↓" for s in state]
     rows = [chars[i : i + n_cols] for i in range(0, len(chars), n_cols)]
     return "\n".join(" ".join(row) for row in rows)
+
+
+def spins_to_grid(values: Sequence[float], n_cols: int = 2) -> List[List[float]]:
+    return [list(values[i : i + n_cols]) for i in range(0, len(values), n_cols)]
+
+
+def expected_site_magnetization(dist: Distribution) -> List[float]:
+    if not dist:
+        return []
+    n = len(next(iter(dist.keys())))
+    means: List[float] = []
+    for i in range(n):
+        means.append(sum(state[i] * p for state, p in dist.items()))
+    return means
 
 
 # ---------------------------
@@ -214,6 +228,36 @@ def model_4_full_state_space(
         traj.append(current)
 
     return traj
+
+
+def model_3_heatmap_trajectory(
+    initial_probs: Sequence[float],
+    params: IsingParams,
+    steps: int,
+    mixing: float = 0.2,
+    n_cols: int = 2,
+) -> List[List[List[float]]]:
+    probs = list(initial_probs)
+    frames: List[List[List[float]]] = [spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols)]
+    for _ in range(steps):
+        probs = model_3_local_probabilities(probs, params=params, mixing=mixing)
+        frames.append(spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols))
+    return frames
+
+
+def model_4_heatmap_trajectory(
+    start: State,
+    params: IsingParams,
+    edges: Sequence[Tuple[int, int]],
+    steps: int,
+    n_cols: int = 2,
+) -> List[List[List[float]]]:
+    dist_traj = model_4_full_state_space(start=start, params=params, edges=edges, steps=steps)
+    frames: List[List[List[float]]] = []
+    for dist in dist_traj:
+        mags = expected_site_magnetization(dist)
+        frames.append(spins_to_grid(mags, n_cols=n_cols))
+    return frames
 
 
 def print_model_header(name: str) -> None:
