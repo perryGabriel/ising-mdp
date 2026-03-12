@@ -29,10 +29,10 @@ ising-four-models --steps 4 --exp-atoms 4
 
 ## Heatmap GIF animation
 
-Create an animated GIF with **all four models** and a parameter key overlay:
+Create an animated GIF with **all four models sharing one lattice size + initial condition**:
 
 ```bash
-ising-heatmap-gif --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_demos/ising_heatmaps.gif
+ising-heatmap-gif --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --hold-frames 4 --intro-label-frames 6 --output python_demos/ising_heatmaps.gif
 ```
 
 The animation panels are:
