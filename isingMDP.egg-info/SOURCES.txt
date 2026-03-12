@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+isingMDP.egg-info/PKG-INFO
+isingMDP.egg-info/SOURCES.txt
+isingMDP.egg-info/dependency_links.txt
+isingMDP.egg-info/entry_points.txt
+isingMDP.egg-info/requires.txt
+isingMDP.egg-info/top_level.txt
+python_demos/__init__.py
+python_demos/ising_four_models.py
+python_demos/ising_heatmap_gif.py
+python_demos/test_ising_four_models.py

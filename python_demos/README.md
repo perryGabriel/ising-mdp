@@ -37,10 +37,10 @@ ising-heatmap-gif --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_
 
 The animation panels are:
 
-- **Model 1**: independent-spin lattice heatmap on `rows`x`cols`.
-- **Model 2**: mean-field lattice heatmap on `rows`x`cols`.
-- **Model 3**: local-neighborhood expected-spin heatmap on `rows`x`cols`.
-- **Model 4**: full-state expected-spin heatmap on `rows`x`cols` (currently `rows*cols<=9`).
+- **Model 1**: 1x2 strip for `[P(↓), P(↑)]`.
+- **Model 2**: 1x(`N+1`) strip over `K=#up`.
+- **Model 3**: `rows`x`cols` expected-spin heatmap.
+- **Model 4**: `rows`x`cols` expected-spin heatmap for `N=rows*cols` (currently `N<=4`).
 
 Color scale values are in `[-1, 1]`.
 
@@ -58,4 +58,4 @@ From inside `python_demos/`:
 python test_ising_four_models.py
 ```
 
-All models use the same seeded random lattice initialization (`--seed`).
+Models 3 and 4 use the same seeded random lattice initialization (`--seed`).

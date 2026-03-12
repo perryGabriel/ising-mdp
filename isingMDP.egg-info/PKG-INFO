@@ -1,3 +1,14 @@
+Metadata-Version: 2.4
+Name: isingMDP
+Version: 0.1.0
+Summary: Ising-inspired MDP simulation demos and heatmap visualizations
+Author: Ising MDP contributors
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Provides-Extra: viz
+Requires-Dist: matplotlib>=3.8; extra == "viz"
+Requires-Dist: pillow>=10.0; extra == "viz"
+
 # Ising MDP demos
 
 This repository contains:
@@ -39,12 +50,12 @@ python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 
 
 The GIF includes all four models, and models 3 and 4 share the same seeded 2x2 lattice initialization:
 
-1. Model 1 independent-spin lattice,
-2. Model 2 mean-field lattice,
-3. Model 3 local-neighborhood probabilities on the selected lattice,
-4. Model 4 full state-space expected spins on the same lattice.
+1. Model 1 single-spin chain,
+2. Model 2 mean-field over `K=#up`,
+3. Model 3 local 2x2 probabilities,
+4. Model 4 full state-space expected spins,
 
-and overlays a parameter key (`T`, `J`, `h`, mixing, lattice, seed).
+and overlays a parameter key (`T`, `J`, `h`, mixing, mean-field size).
 # Ising MDP simulator
 
 This repo now targets **GitHub Pages via `/docs`**.
