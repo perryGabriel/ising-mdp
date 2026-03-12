@@ -3,8 +3,14 @@
 import unittest
 
 try:
+    from python_demos.ising_heatmap_gif import build_parser as build_gif_parser
+except ModuleNotFoundError:
+    from ising_heatmap_gif import build_parser as build_gif_parser  # type: ignore
+
+try:
     from python_demos.ising_four_models import (
         IsingParams,
+        grid_edges,
         model_1_heatmap_trajectory,
         model_1_single_spin,
         model_2_heatmap_trajectory,
@@ -18,6 +24,7 @@ try:
 except ModuleNotFoundError:
     from ising_four_models import (  # type: ignore
         IsingParams,
+        grid_edges,
         model_1_heatmap_trajectory,
         model_1_single_spin,
         model_2_heatmap_trajectory,
@@ -105,6 +112,48 @@ class IsingDemoTests(unittest.TestCase):
         for frame in traj:
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
+
+    def test_heatmap_gif_parser_accepts_rows_cols_seed(self):
+        parser = build_gif_parser()
+        args = parser.parse_args(["--rows", "2", "--cols", "2", "--seed", "7"])
+        self.assertEqual(args.rows, 2)
+        self.assertEqual(args.cols, 2)
+        self.assertEqual(args.seed, 7)
+
+    def test_all_model_trajectories_can_share_common_lattice_shape(self):
+        params = IsingParams()
+        start = (1, -1, 1, -1)
+        rows, cols = 2, 2
+
+        model1 = model_1_heatmap_trajectory(params=params, steps=2, initial_spins=start, n_cols=cols)
+        model2 = model_2_heatmap_trajectory(
+            n_spins=len(start),
+            params=params,
+            steps=2,
+            n_rows=rows,
+            n_cols=cols,
+            initial_k_dist={2: 1.0},
+        )
+        model3 = model_3_heatmap_trajectory(
+            initial_probs=[1.0 if s == 1 else 0.0 for s in start],
+            params=params,
+            steps=2,
+            n_rows=rows,
+            n_cols=cols,
+        )
+        model4 = model_4_heatmap_trajectory(
+            start=start,
+            params=params,
+            edges=grid_edges(rows, cols),
+            steps=2,
+            n_cols=cols,
+        )
+
+        for traj in [model1, model2, model3, model4]:
+            self.assertEqual(len(traj), 3)
+            for frame in traj:
+                self.assertEqual(len(frame), rows)
+                self.assertEqual(len(frame[0]), cols)
 
 if __name__ == "__main__":
     unittest.main()

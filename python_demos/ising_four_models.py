@@ -4,8 +4,8 @@
 This module includes:
 1) A single-spin two-state chain.
 2) A mean-field chain over K=#(up spins).
-3) A local-neighborhood probability model on a 2x2 lattice.
-4) A full exponential-state Gibbs model (recommended with N<=4).
+3) A local-neighborhood probability model on an arbitrary rows x cols lattice.
+4) A full exponential-state Gibbs model (recommended with small N).
 
 It also exposes convenience trajectory builders for terminal demos and heatmaps.
 """
@@ -112,11 +112,28 @@ def model_1_single_spin(params: IsingParams) -> Dict[State, Distribution]:
     }
 
 
-def model_1_heatmap_trajectory(params: IsingParams, steps: int) -> List[List[List[float]]]:
-    """Return a 1x2 heatmap trajectory for model 1.
+def model_1_heatmap_trajectory(
+    params: IsingParams,
+    steps: int,
+    initial_spins: Sequence[int] | None = None,
+    n_cols: int = 2,
+) -> List[List[List[float]]]:
+    """Return model-1 heatmap frames.
 
-    Columns are [P(↓), P(↑)] mapped to [-1,1] by `2p-1`.
+    If `initial_spins` is omitted, returns the legacy 1x2 `[P(↓), P(↑)]` strip.
+    If `initial_spins` is provided, returns a lattice-shaped trajectory.
     """
+
+    if initial_spins is not None:
+        beta = 1.0 / max(params.temperature, 1e-6)
+        p_up = logistic(2.0 * beta * params.field)
+        eq_spin = 2.0 * p_up - 1.0
+        init_vals = [1.0 if s == 1 else -1.0 for s in initial_spins]
+        eq_vals = [eq_spin for _ in initial_spins]
+        frames: List[List[List[float]]] = [spins_to_grid(init_vals, n_cols=n_cols)]
+        for _ in range(steps):
+            frames.append(spins_to_grid(eq_vals, n_cols=n_cols))
+        return frames
 
     trans = model_1_single_spin(params)
     dist: Distribution = {(1,): 1.0}
@@ -171,48 +188,84 @@ def model_2_mean_field(
     return {k: v / total for k, v in next_dist.items()}
 
 
-def model_2_heatmap_trajectory(n_spins: int, params: IsingParams, steps: int) -> List[List[List[float]]]:
-    """Return a 1x(n_spins+1) heat-strip trajectory over K states."""
+def model_2_heatmap_trajectory(
+    n_spins: int,
+    params: IsingParams,
+    steps: int,
+    n_rows: int | None = None,
+    n_cols: int | None = None,
+    initial_k_dist: Dict[int, float] | None = None,
+) -> List[List[List[float]]]:
+    """Return model-2 heatmap frames (legacy strip or lattice view)."""
 
-    k_dist: Dict[int, float] = {n_spins // 2: 1.0}
+    k_dist: Dict[int, float] = initial_k_dist if initial_k_dist is not None else {n_spins // 2: 1.0}
 
     def to_row(dist: Dict[int, float]) -> List[List[float]]:
         return [[2.0 * dist.get(k, 0.0) - 1.0 for k in range(n_spins + 1)]]
 
-    frames: List[List[List[float]]] = [to_row(k_dist)]
+    def to_lattice(dist: Dict[int, float]) -> List[List[float]]:
+        exp_k = sum(k * p for k, p in dist.items())
+        magnetization = (2.0 * exp_k - n_spins) / n_spins
+        assert n_rows is not None and n_cols is not None
+        return spins_to_grid([magnetization] * (n_rows * n_cols), n_cols=n_cols)
+
+    frames: List[List[List[float]]] = [to_lattice(k_dist) if n_rows is not None and n_cols is not None else to_row(k_dist)]
     for _ in range(steps):
         k_dist = model_2_mean_field(n_spins=n_spins, params=params, current_k_dist=k_dist)
-        frames.append(to_row(k_dist))
+        frames.append(to_lattice(k_dist) if n_rows is not None and n_cols is not None else to_row(k_dist))
     return frames
 
 
 # -------------------------------------------------
 # Model 3: local-neighborhood probability evolution
 # -------------------------------------------------
-def neighbors_2x2(index: int) -> List[int]:
-    """Return 4-neighborhood (without diagonals) on a 2x2 grid index."""
+def grid_neighbors(index: int, n_rows: int, n_cols: int) -> List[int]:
+    """Return 4-neighborhood (without diagonals) on an n_rows x n_cols grid."""
 
-    if index == 0:
-        return [1, 2]
-    if index == 1:
-        return [0, 3]
-    if index == 2:
-        return [0, 3]
-    return [1, 2]
+    row, col = divmod(index, n_cols)
+    neighbors: List[int] = []
+    if row > 0:
+        neighbors.append((row - 1) * n_cols + col)
+    if row < n_rows - 1:
+        neighbors.append((row + 1) * n_cols + col)
+    if col > 0:
+        neighbors.append(row * n_cols + (col - 1))
+    if col < n_cols - 1:
+        neighbors.append(row * n_cols + (col + 1))
+    return neighbors
+
+
+def grid_edges(n_rows: int, n_cols: int) -> List[Tuple[int, int]]:
+    """Return undirected nearest-neighbor edges for an n_rows x n_cols lattice."""
+
+    edges: List[Tuple[int, int]] = []
+    for row in range(n_rows):
+        for col in range(n_cols):
+            idx = row * n_cols + col
+            if row + 1 < n_rows:
+                edges.append((idx, (row + 1) * n_cols + col))
+            if col + 1 < n_cols:
+                edges.append((idx, row * n_cols + (col + 1)))
+    return edges
 
 
 def model_3_local_probabilities(
     current_probs: Sequence[float],
     params: IsingParams,
     mixing: float = 0.2,
+    n_rows: int = 2,
+    n_cols: int = 2,
 ) -> List[float]:
     """Advance per-site up-spin probabilities for the local model by one step."""
+
+    if len(current_probs) != n_rows * n_cols:
+        raise ValueError("current_probs length must equal n_rows * n_cols")
 
     beta = 1.0 / max(params.temperature, 1e-6)
     next_probs: List[float] = []
     for i, p_up in enumerate(current_probs):
-        neigh = neighbors_2x2(i)
-        neigh_mag = sum(2.0 * current_probs[j] - 1.0 for j in neigh) / len(neigh)
+        neigh = grid_neighbors(i, n_rows=n_rows, n_cols=n_cols)
+        neigh_mag = 0.0 if not neigh else sum(2.0 * current_probs[j] - 1.0 for j in neigh) / len(neigh)
         local_field = params.coupling * neigh_mag + params.field
         target = logistic(2.0 * beta * local_field)
         next_probs.append((1.0 - mixing) * p_up + mixing * target)
@@ -237,14 +290,24 @@ def model_3_heatmap_trajectory(
     params: IsingParams,
     steps: int,
     mixing: float = 0.2,
+    n_rows: int = 2,
     n_cols: int = 2,
 ) -> List[List[List[float]]]:
     """Return trajectory of model-3 expected spins as heatmap frames."""
 
+    if len(initial_probs) != n_rows * n_cols:
+        raise ValueError("initial_probs length must equal n_rows * n_cols")
+
     probs = list(initial_probs)
     frames: List[List[List[float]]] = [spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols)]
     for _ in range(steps):
-        probs = model_3_local_probabilities(probs, params=params, mixing=mixing)
+        probs = model_3_local_probabilities(
+            probs,
+            params=params,
+            mixing=mixing,
+            n_rows=n_rows,
+            n_cols=n_cols,
+        )
         frames.append(spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols))
     return frames
 

@@ -31,20 +31,20 @@ Run tests:
 python -m unittest python_demos/test_ising_four_models.py
 ```
 
-Generate animated heatmaps (all four models, same layout/init):
+Generate animated heatmaps (all four models on the same rows×cols lattice and shared seed):
 
 ```bash
 python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_demos/ising_heatmaps.gif
 ```
 
-The GIF includes all four models in the same 2x2 atom arrangement with shared initialization:
+The GIF includes all four models on the same lattice shape, all seeded from the same initial state:
 
-1. Model 1 single-spin chain,
-2. Model 2 mean-field over `K=#up`,
-3. Model 3 local 2x2 probabilities,
-4. Model 4 full state-space expected spins,
+1. Model 1 independent-spin lattice,
+2. Model 2 mean-field lattice,
+3. Model 3 local-neighborhood probabilities on the selected lattice,
+4. Model 4 full state-space expected spins on the same lattice.
 
-and overlays a parameter key (`T`, `J`, `h`, mixing, mean-field size).
+and overlays a parameter key (`T`, `J`, `h`, mixing, lattice, seed).
 # Ising MDP simulator
 
 This repo now targets **GitHub Pages via `/docs`**.
