@@ -34,7 +34,7 @@ python -m unittest python_demos/test_ising_four_models.py
 Generate animated heatmaps (all four models on the same rows×cols lattice and shared seed):
 
 ```bash
-python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_demos/ising_heatmaps.gif
+python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --hold-frames 4 --intro-label-frames 6 --output python_demos/ising_heatmaps.gif
 ```
 
 The GIF includes all four models on the same lattice shape, all seeded from the same initial state:

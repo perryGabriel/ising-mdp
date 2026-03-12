@@ -113,12 +113,16 @@ class IsingDemoTests(unittest.TestCase):
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
 
-    def test_heatmap_gif_parser_accepts_rows_cols_seed(self):
+    def test_heatmap_gif_parser_accepts_layout_seed_and_intro_controls(self):
         parser = build_gif_parser()
-        args = parser.parse_args(["--rows", "2", "--cols", "2", "--seed", "7"])
+        args = parser.parse_args([
+            "--rows", "2", "--cols", "2", "--seed", "7", "--hold-frames", "4", "--intro-label-frames", "6"
+        ])
         self.assertEqual(args.rows, 2)
         self.assertEqual(args.cols, 2)
         self.assertEqual(args.seed, 7)
+        self.assertEqual(args.hold_frames, 4)
+        self.assertEqual(args.intro_label_frames, 6)
 
     def test_all_model_trajectories_can_share_common_lattice_shape(self):
         params = IsingParams()
