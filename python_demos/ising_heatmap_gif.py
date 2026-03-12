@@ -42,12 +42,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rows", type=int, default=None, help="Lattice rows for models 3 and 4")
     parser.add_argument("--cols", type=int, default=None, help="Lattice columns for models 3 and 4")
     parser.add_argument("--seed", type=int, default=7, help="Random seed for shared lattice initialization")
-    parser.add_argument(
-        "--exp-atoms",
-        type=int,
-        default=4,
-        help="Deprecated fallback for model-4 atoms when rows*cols is not set.",
-    )
+    parser.add_argument("--hold-frames", type=int, default=4, help="Extra initial-condition frames before dynamics")
+    parser.add_argument("--intro-label-frames", type=int, default=6, help="Frames to show interpretation labels")
     return parser
 
 
@@ -117,19 +113,25 @@ def main() -> None:
 
     n_frames = min(len(model1_frames), len(model2_frames), len(model3_frames), len(model4_frames))
 
-    fig, axes = plt.subplots(2, 2, figsize=(11, 7), constrained_layout=True)
+    hold_frames = max(0, args.hold_frames)
+    total_frames = hold_frames + n_frames
+
+    fig, axes = plt.subplots(2, 2, figsize=(9, 9), constrained_layout=True)
     fig.suptitle("Ising model heatmaps over time", fontsize=12)
     ax = axes.ravel()
 
-    im1 = ax[0].imshow(model1_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="auto", animated=True)
-    im2 = ax[1].imshow(model2_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="auto", animated=True)
-    im3 = ax[2].imshow(model3_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", animated=True)
-    im4 = ax[3].imshow(model4_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", animated=True)
+    im1 = ax[0].imshow(model1_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
+    im2 = ax[1].imshow(model2_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
+    im3 = ax[2].imshow(model3_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
+    im4 = ax[3].imshow(model4_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
 
     ax[0].set_title("Model 1: Independent-spin lattice")
     ax[1].set_title("Model 2: Mean-field lattice")
     ax[2].set_title("Model 3: Local probs")
     ax[3].set_title(f"Model 4: Full state space ({args.rows}x{args.cols}, N={n_atoms})")
+
+    for panel in ax:
+        panel.set_box_aspect(1)
 
     ax[0].set_yticks([])
     ax[0].set_xticks([])
@@ -153,17 +155,38 @@ def main() -> None:
         ),
         ha="center",
     )
-    step_text = fig.text(0.02, 0.01, "step = 0", ha="left")
+    step_text = fig.text(0.02, 0.01, "step = 0 (initial hold)", ha="left")
+    intro_text = fig.text(
+        0.5,
+        0.965,
+        "Intro: shared seeded initial condition across all models",
+        ha="center",
+        va="top",
+        fontsize=10,
+        bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.75},
+    )
 
     def update(frame_idx: int):
-        im1.set_data(model1_frames[frame_idx])
-        im2.set_data(model2_frames[frame_idx])
-        im3.set_data(model3_frames[frame_idx])
-        im4.set_data(model4_frames[frame_idx])
-        step_text.set_text(f"step = {frame_idx}")
-        return [im1, im2, im3, im4, step_text, param_text]
+        model_idx = 0 if frame_idx < hold_frames else frame_idx - hold_frames
+        im1.set_data(model1_frames[model_idx])
+        im2.set_data(model2_frames[model_idx])
+        im3.set_data(model3_frames[model_idx])
+        im4.set_data(model4_frames[model_idx])
 
-    animation = FuncAnimation(fig, update, frames=n_frames, interval=max(1, int(1000 / args.fps)), blit=True)
+        if frame_idx < hold_frames:
+            step_text.set_text(f"step = 0 (initial hold {frame_idx + 1}/{hold_frames})")
+        else:
+            step_text.set_text(f"step = {model_idx}")
+
+        if frame_idx < max(0, args.intro_label_frames):
+            intro_text.set_text("Intro: seeded start • red=up (+1), blue=down (-1), all panels share rows×cols")
+            intro_text.set_visible(True)
+        else:
+            intro_text.set_visible(False)
+
+        return [im1, im2, im3, im4, step_text, param_text, intro_text]
+
+    animation = FuncAnimation(fig, update, frames=total_frames, interval=max(1, int(1000 / args.fps)), blit=True)
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
