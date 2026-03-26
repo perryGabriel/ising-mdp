@@ -18,6 +18,8 @@ viz = ["matplotlib>=3.8", "pillow>=10.0"]
 ising-four-models = "python_demos.ising_four_models:demo_entry"
 ising-heatmap-gif = "python_demos.ising_heatmap_gif:main"
 ising-magnetization-compare = "python_demos.ising_magnetization_compare:main"
+ising-fit-parameter-map = "python_demos.fit_parameter_map:main"
+ising-plot-manifold = "python_demos.plot_magnetization_manifold:main"
 
 [tool.setuptools]
 packages = ["python_demos", "isingmdp"]

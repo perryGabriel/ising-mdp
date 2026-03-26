@@ -75,3 +75,9 @@ The Vite build output is written to `docs/`. Commit that folder, then in GitHub 
 - **Folder**: `/docs`
 
 The app renders four independent simulation panels, each with isolated controls and initial-state tuning.
+
+
+Model-translation deliverables now include:
+- `python_demos/fit_parameter_map.py` for `phi_{i->j}` fitting,
+- `python_demos/plot_magnetization_manifold.py` for trajectory bands + residual maps, and
+- `python_demos/renormalization_demo.ipynb` for a walkthrough notebook.
