@@ -2,6 +2,21 @@
 
 import math
 import unittest
+from pathlib import Path
+
+try:
+    import isingmdp
+except ModuleNotFoundError:
+    # Allow direct execution from inside python_demos/ without installation.
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+    import isingmdp
+
+try:
+    from python_demos.ising_heatmap_gif import build_parser as build_gif_parser
+except ModuleNotFoundError:
+    from ising_heatmap_gif import build_parser as build_gif_parser  # type: ignore
 
 import isingmdp
 
