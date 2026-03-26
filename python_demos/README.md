@@ -49,7 +49,7 @@ Color scale values are in `[-1, 1]`.
 Build raw trajectory data and a grouped manifold summary over `(J, h, T, t)`:
 
 ```bash
-python ising_magnetization_compare.py --rows 2 --cols 2 --steps 20 --seeds 30 --output-raw magnetization_timeseries.csv --output-summary magnetization_summary.csv
+python .\python_demos\ising_magnetization_compare.py --rows 2 --cols 2 --steps 20 --seeds 30 --output-raw magnetization_timeseries.csv --output-summary magnetization_summary.csv
 ```
 
 The raw file stores `m(t)` per model/seed, and the summary file stores mean/variance of `m` at each `(model, J, h, T, t)` grid point.
