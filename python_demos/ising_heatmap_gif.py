@@ -104,7 +104,7 @@ def main() -> None:
     total_frames = hold_frames + n_frames
 
     fig, axes = plt.subplots(2, 2, figsize=(9, 9), constrained_layout=True)
-    fig.suptitle("Ising model heatmaps over time", fontsize=12)
+    fig.suptitle("Ising model heatmaps over time (T,J,h)", fontsize=12)
     ax = axes.ravel()
 
     im1 = ax[0].imshow(model1_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
@@ -112,9 +112,9 @@ def main() -> None:
     im3 = ax[2].imshow(model3_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
     im4 = ax[3].imshow(model4_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
 
-    ax[0].set_title("Model 1: Independent-spin lattice")
-    ax[1].set_title("Model 2: Mean-field lattice")
-    ax[2].set_title("Model 3: Local probs")
+    ax[0].set_title(f"Model 1: Independent-spin lattice ({args.temperature:.3g}, {args.coupling:.3g}, {args.field:.3g})")
+    ax[1].set_title(f"Model 2: Mean-field lattice ({args.temperature:.3g}, {args.coupling:.3g}, {args.field:.3g})")
+    ax[2].set_title(f"Model 3: Local probs ({args.temperature:.3g}, {args.coupling:.3g}, {args.field:.3g})")
     ax[3].set_title(f"Model 4: Full state space ({args.rows}x{args.cols}, N={n_atoms})")
 
     for panel in ax:
