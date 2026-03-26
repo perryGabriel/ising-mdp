@@ -11,6 +11,12 @@ This repository contains:
 pip install -e .
 ```
 
+Import in Python after install:
+
+```python
+from isingmdp import IsingParams, model_1_heatmap_trajectory
+```
+
 Optional visualization dependencies:
 
 ```bash
@@ -31,20 +37,27 @@ Run tests:
 python -m unittest python_demos/test_ising_four_models.py
 ```
 
-Generate animated heatmaps (all four models, same layout/init):
+
+Generate cross-model magnetization datasets (raw + summary manifold):
 
 ```bash
-python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --output python_demos/ising_heatmaps.gif
+python python_demos/ising_magnetization_compare.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seeds 30
 ```
 
-The GIF includes all four models in the same 2x2 atom arrangement with shared initialization:
+Generate animated heatmaps (all four models on the same rows×cols lattice and shared seed):
 
-1. Model 1 single-spin chain,
-2. Model 2 mean-field over `K=#up`,
-3. Model 3 local 2x2 probabilities,
-4. Model 4 full state-space expected spins,
+```bash
+python .\python_demos\ising_heatmap_gif.py --artifact-prefix artifacts --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --hold-frames 4 --intro-label-frames 6
+```
 
-and overlays a parameter key (`T`, `J`, `h`, mixing, mean-field size).
+The GIF includes all four models on the same lattice shape, all seeded from the same initial state:
+
+1. Model 1 independent-spin lattice,
+2. Model 2 mean-field lattice,
+3. Model 3 local-neighborhood probabilities on the selected lattice,
+4. Model 4 full state-space expected spins on the same lattice.
+
+and overlays a parameter key (`T`, `J`, `h`, mixing, lattice, seed).
 # Ising MDP simulator
 
 This repo now targets **GitHub Pages via `/docs`**.
@@ -69,3 +82,15 @@ The Vite build output is written to `docs/`. Commit that folder, then in GitHub 
 - **Folder**: `/docs`
 
 The app renders four independent simulation panels, each with isolated controls and initial-state tuning.
+
+
+Model-translation deliverables now include:
+- `python_demos/fit_parameter_map.py` for `phi_{i->j}` fitting,
+- `python_demos/plot_magnetization_manifold.py` for trajectory bands + residual maps,
+- `python_demos/visualize_trajectory_matching.py` for mapped trajectory overlays + evaluation artifacts, and
+- `python_demos/renormalization_operator_demo.py` for explicit operator-order comparison,
+- `python_demos/run_report_pipeline.py` for one-command phase execution, and
+- `notebooks/renormalization_demo.ipynb` for a walkthrough notebook.
+
+
+Generated outputs are organized under `artifacts/` with per-phase subfolders and README guides.

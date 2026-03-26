@@ -17,6 +17,12 @@ viz = ["matplotlib>=3.8", "pillow>=10.0"]
 [project.scripts]
 ising-four-models = "python_demos.ising_four_models:demo_entry"
 ising-heatmap-gif = "python_demos.ising_heatmap_gif:main"
+ising-magnetization-compare = "python_demos.ising_magnetization_compare:main"
+ising-fit-parameter-map = "python_demos.fit_parameter_map:main"
+ising-plot-manifold = "python_demos.plot_magnetization_manifold:main"
+ising-visualize-matching = "python_demos.visualize_trajectory_matching:main"
+ising-renorm-demo = "python_demos.renormalization_operator_demo:main"
+ising-run-report-pipeline = "python_demos.run_report_pipeline:main"
 
 [tool.setuptools]
-packages = ["python_demos"]
+packages = ["python_demos", "isingmdp"]
