@@ -1,6 +1,14 @@
 """Tests for Ising demo models and heatmap helpers."""
 
+import math
 import unittest
+
+import isingmdp
+
+try:
+    from python_demos.ising_heatmap_gif import build_parser as build_gif_parser
+except ModuleNotFoundError:
+    from ising_heatmap_gif import build_parser as build_gif_parser  # type: ignore
 
 try:
     from python_demos.ising_heatmap_gif import build_parser as build_gif_parser
@@ -40,6 +48,9 @@ except ModuleNotFoundError:
 class IsingDemoTests(unittest.TestCase):
     """Covers normalization, bounds, and heatmap frame shapes."""
 
+    def test_top_level_package_import_smoke(self):
+        self.assertTrue(hasattr(isingmdp, "model_2_mean_field"))
+
     def test_model_1_distribution_sums_to_one(self):
         params = IsingParams(temperature=1.0, coupling=0.5, field=0.1)
         trans = model_1_single_spin(params)
@@ -49,6 +60,12 @@ class IsingDemoTests(unittest.TestCase):
         params = IsingParams(temperature=1.0, coupling=0.5, field=0.0)
         dist = model_2_mean_field(8, params, {4: 1.0})
         self.assertAlmostEqual(sum(dist.values()), 1.0)
+
+    def test_model_2_mean_field_uses_tanh_magnetization_update(self):
+        params = IsingParams(temperature=1.0, coupling=0.0, field=0.4)
+        dist = model_2_mean_field(10, params, {5: 1.0})
+        next_m = sum(((2 * k - 10) / 10) * p for k, p in dist.items())
+        self.assertAlmostEqual(next_m, math.tanh(0.4), places=6)
 
     def test_model_3_stays_bounded(self):
         params = IsingParams(temperature=0.8, coupling=0.7, field=0.2)

@@ -163,29 +163,24 @@ def model_2_mean_field(
     params: IsingParams,
     current_k_dist: Dict[int, float],
 ) -> Dict[int, float]:
-    """Advance mean-field distribution over K=#up by one step."""
+    """Advance mean-field distribution using a tanh update on mean magnetization.
+
+    The model evolves only the mean magnetization m_t, then projects the result
+    back to a narrow K distribution that preserves E[K].
+    """
 
     beta = 1.0 / max(params.temperature, 1e-6)
-    next_dist: Dict[int, float] = defaultdict(float)
+    current_m = sum(((2 * k - n_spins) / n_spins) * p for k, p in current_k_dist.items())
+    next_m = math.tanh(beta * (params.coupling * current_m + params.field))
 
-    for k, pk in current_k_dist.items():
-        magnetization = (2 * k - n_spins) / n_spins
-        mean_field = params.coupling * magnetization + params.field
-        p_up_if_flipped = logistic(2.0 * beta * mean_field)
+    expected_k = (next_m * n_spins + n_spins) / 2.0
+    k_low = max(0, min(n_spins, int(math.floor(expected_k))))
+    k_high = max(0, min(n_spins, int(math.ceil(expected_k))))
+    if k_low == k_high:
+        return {k_low: 1.0}
 
-        p_pick_up = k / n_spins
-        p_pick_down = 1.0 - p_pick_up
-
-        if k > 0:
-            next_dist[k] += pk * p_pick_up * p_up_if_flipped
-            next_dist[k - 1] += pk * p_pick_up * (1.0 - p_up_if_flipped)
-
-        if k < n_spins:
-            next_dist[k + 1] += pk * p_pick_down * p_up_if_flipped
-            next_dist[k] += pk * p_pick_down * (1.0 - p_up_if_flipped)
-
-    total = sum(next_dist.values())
-    return {k: v / total for k, v in next_dist.items()}
+    frac = expected_k - k_low
+    return {k_low: 1.0 - frac, k_high: frac}
 
 
 def model_2_heatmap_trajectory(
