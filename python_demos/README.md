@@ -54,6 +54,26 @@ python ising_magnetization_compare.py --rows 2 --cols 2 --steps 20 --seeds 30 --
 
 The raw file stores `m(t)` per model/seed, and the summary file stores mean/variance of `m` at each `(model, J, h, T, t)` grid point.
 
+## Parameter-map fitting
+
+Fit `phi_{i->j}` by nearest-neighbor manifold matching with an affine approximation:
+
+```bash
+python fit_parameter_map.py --summary-csv magnetization_summary.csv --source-model model_1 --target-model model_2 --output-map parameter_map.csv --output-affine parameter_map_affine.json
+```
+
+## Manifold plotting
+
+Render trajectory bands and residual maps from generated CSVs:
+
+```bash
+python plot_magnetization_manifold.py --summary-csv magnetization_summary.csv --map-csv parameter_map.csv --source-model model_1 --target-model model_2 --output-traj traj_bands.png --output-residual residual_map.png
+```
+
+## Notebook walkthrough
+
+Open `renormalization_demo.ipynb` for a pedagogical side-by-side projection + residual workflow.
+
 ## Testing
 
 From repo root:
