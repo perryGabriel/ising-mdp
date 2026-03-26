@@ -31,7 +31,8 @@ def build_parser() -> argparse.ArgumentParser:
     """Build CLI parser for GIF generation."""
 
     parser = argparse.ArgumentParser(description="Create a GIF of Ising heatmaps over time.")
-    parser.add_argument("--output", default="python_demos/ising_heatmaps.gif", help="Output GIF path")
+    parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
+    parser.add_argument("--output", default=None, help="Output GIF path (overrides artifact-prefix default)")
     parser.add_argument("--steps", type=int, default=20, help="Animation steps")
     parser.add_argument("--fps", type=int, default=4, help="Frames per second")
     parser.add_argument("--temperature", type=float, default=1.0)
@@ -188,7 +189,7 @@ def main() -> None:
 
     animation = FuncAnimation(fig, update, frames=total_frames, interval=max(1, int(1000 / args.fps)), blit=True)
 
-    output_path = Path(args.output)
+    output_path = Path(args.output) if args.output else Path(args.artifact_prefix) / "gifs" / "ising_heatmaps.gif"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     animation.save(output_path, writer=PillowWriter(fps=args.fps))
     print(f"Saved GIF to {output_path}")
