@@ -23,10 +23,9 @@ SummaryKey = Tuple[str, float, float, float, int]  # model, J, h, T, t
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Visualize trajectory matching and mapping artifacts.")
-    parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
-    parser.add_argument("--raw-csv", default=None)
-    parser.add_argument("--summary-csv", default=None)
-    parser.add_argument("--map-csv", default=None)
+    parser.add_argument("--raw-csv", default="python_demos/magnetization_timeseries.csv")
+    parser.add_argument("--summary-csv", default="python_demos/magnetization_summary.csv")
+    parser.add_argument("--map-csv", default="python_demos/parameter_map.csv")
 
     parser.add_argument("--source-model", default="model_1")
     parser.add_argument("--target-model", default="model_2")
@@ -38,8 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--init-up-frac-tol", type=float, default=0.15)
     parser.add_argument("--max-seeds", type=int, default=12)
 
-    parser.add_argument("--output-traj", default=None)
-    parser.add_argument("--output-artifacts", default=None)
+    parser.add_argument("--output-traj", default="python_demos/trajectory_matching.png")
+    parser.add_argument("--output-artifacts", default="python_demos/matching_artifacts.png")
     return parser.parse_args()
 
 
@@ -128,34 +127,12 @@ def mean_series(keys: List[RawKey], all_series: Dict[RawKey, Dict[int, float]]) 
 def main() -> None:
     args = parse_args()
 
-    raw_csv = (
-        Path(args.raw_csv)
-        if args.raw_csv
-        else Path(args.artifact_prefix) / "data" / "raw" / "magnetization_timeseries.csv"
-    )
-    summary_csv = (
-        Path(args.summary_csv)
-        if args.summary_csv
-        else Path(args.artifact_prefix) / "data" / "summary" / "magnetization_summary.csv"
-    )
-    map_csv = Path(args.map_csv) if args.map_csv else Path(args.artifact_prefix) / "maps" / "parameter_map.csv"
-    output_traj = (
-        Path(args.output_traj)
-        if args.output_traj
-        else Path(args.artifact_prefix) / "plots" / "trajectory_matching.png"
-    )
-    output_artifacts = (
-        Path(args.output_artifacts)
-        if args.output_artifacts
-        else Path(args.artifact_prefix) / "plots" / "matching_artifacts.png"
-    )
-
     try:
         import matplotlib.pyplot as plt
     except ModuleNotFoundError as exc:
         raise SystemExit("Missing plotting dependency. Install with: pip install matplotlib") from exc
 
-    map_row = nearest_map_row(map_csv, args.coupling, args.field, args.temperature)
+    map_row = nearest_map_row(Path(args.map_csv), args.coupling, args.field, args.temperature)
     target_c = map_row["target_coupling"]
     target_h = map_row["target_field"]
     target_t = map_row["target_temperature"]
@@ -167,8 +144,8 @@ def main() -> None:
     print(f"  target ({args.target_model}): J={target_c:.3f}, h={target_h:.3f}, T={target_t:.3f}")
     print(f"  fit error (nearest map row): {map_row['fit_error']:.6f}")
 
-    raw, init_frac = load_raw(raw_csv)
-    summary = load_summary(summary_csv)
+    raw, init_frac = load_raw(Path(args.raw_csv))
+    summary = load_summary(Path(args.summary_csv))
 
     if args.init_up_frac is None:
         source_seed_keys = [
@@ -241,13 +218,13 @@ def main() -> None:
         f"Trajectories with similar initial up-fraction (~{target_init_frac:.2f}, tol={args.init_up_frac_tol:.2f})",
         fontsize=11,
     )
-    output_traj.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_traj, dpi=170)
+    Path(args.output_traj).parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(args.output_traj, dpi=170)
     plt.close(fig)
 
     # Plot evaluation artifacts.
     map_rows = []
-    with map_csv.open("r", encoding="utf-8") as f:
+    with Path(args.map_csv).open("r", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             map_rows.append({k: float(v) for k, v in row.items()})
 
@@ -276,12 +253,12 @@ def main() -> None:
     artifact_axes[1].set_xlabel("t")
     artifact_axes[1].set_ylabel("absolute residual")
 
-    output_artifacts.parent.mkdir(parents=True, exist_ok=True)
-    artifact_fig.savefig(output_artifacts, dpi=170)
+    Path(args.output_artifacts).parent.mkdir(parents=True, exist_ok=True)
+    artifact_fig.savefig(args.output_artifacts, dpi=170)
     plt.close(artifact_fig)
 
-    print(f"Wrote trajectory comparison plot to {output_traj}")
-    print(f"Wrote evaluation artifact plot to {output_artifacts}")
+    print(f"Wrote trajectory comparison plot to {args.output_traj}")
+    print(f"Wrote evaluation artifact plot to {args.output_artifacts}")
 
 
 if __name__ == "__main__":

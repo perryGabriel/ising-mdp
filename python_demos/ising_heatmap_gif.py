@@ -39,8 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--coupling", type=float, default=0.8)
     parser.add_argument("--field", type=float, default=0.1)
     parser.add_argument("--mixing", type=float, default=0.2, help="Model-3 mixing coefficient")
-    parser.add_argument("--rows", type=int, default=2, help="Lattice rows shared by all model panels")
-    parser.add_argument("--cols", type=int, default=2, help="Lattice columns shared by all model panels")
+    parser.add_argument("--mean-field-spins", type=int, default=12)
+    parser.add_argument("--rows", type=int, default=None, help="Lattice rows for models 3 and 4")
+    parser.add_argument("--cols", type=int, default=None, help="Lattice columns for models 3 and 4")
     parser.add_argument("--seed", type=int, default=7, help="Random seed for shared lattice initialization")
     parser.add_argument("--hold-frames", type=int, default=4, help="Extra initial-condition frames before dynamics")
     parser.add_argument("--intro-label-frames", type=int, default=6, help="Frames to show interpretation labels")
@@ -61,14 +62,27 @@ def main() -> None:
     args = build_parser().parse_args()
     params = IsingParams(temperature=args.temperature, coupling=args.coupling, field=args.field)
 
-    if args.rows <= 0 or args.cols <= 0:
-        raise SystemExit("--rows and --cols must both be positive integers.")
+    if (args.rows is None) != (args.cols is None):
+        raise SystemExit("Provide both --rows and --cols, or provide neither.")
+        args.rows = (n_atoms + args.cols - 1) // args.cols
+    else:
+        if args.rows <= 0 or args.cols <= 0:
+            raise SystemExit("--rows and --cols must both be positive integers.")
+        n_atoms = args.rows * args.cols
+    if n_atoms > 4:
+        raise SystemExit(
+            "Model 4 currently supports up to 4 atoms for tractability; choose rows*cols <= 4."
+        )
+
+    rng = random.Random(args.seed)
+    start = tuple(rng.choice([-1, 1]) for _ in range(n_atoms))
+    initial_probs = [1.0 if spin == 1 else 0.0 for spin in start]
+    edges = [(i, (i + 1) % n_atoms) for i in range(n_atoms)] if n_atoms > 1 else []
 
     n_atoms = args.rows * args.cols
     if n_atoms > 9:
         raise SystemExit("rows*cols must be <= 9 for the full-state model to remain tractable.")
 
-    rng = random.Random(args.seed)
     start = tuple(rng.choice([-1, 1]) for _ in range(n_atoms))
     initial_probs = [1.0 if spin == 1 else 0.0 for spin in start]
     edges = grid_edges(args.rows, args.cols)
@@ -92,7 +106,6 @@ def main() -> None:
         params=params,
         steps=args.steps,
         mixing=args.mixing,
-        n_rows=args.rows,
         n_cols=args.cols,
     )
     model4_frames = model_4_heatmap_trajectory(
@@ -138,7 +151,7 @@ def main() -> None:
         0.01,
         (
             f"T={args.temperature:.3g} | J={args.coupling:.3g} | h={args.field:.3g} "
-            f"| mixing={args.mixing:.3g} "
+            f"| mixing={args.mixing:.3g} | mean_field_spins={args.mean_field_spins} "
             f"| lattice={args.rows}x{args.cols} | seed={args.seed}"
         ),
         ha="center",

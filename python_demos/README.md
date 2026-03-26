@@ -32,7 +32,7 @@ ising-four-models --steps 4 --exp-atoms 4
 Create an animated GIF with **all four models sharing one lattice size + initial condition**:
 
 ```bash
-ising-heatmap-gif --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --hold-frames 4 --intro-label-frames 6 
+python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --hold-frames 4 --intro-label-frames 6 --output python_demos/ising_heatmaps.gif
 ```
 
 The animation panels are:
@@ -49,7 +49,7 @@ Color scale values are in `[-1, 1]`.
 Build raw trajectory data and a grouped manifold summary over `(J, h, T, t)`:
 
 ```bash
-python ising_magnetization_compare.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seeds 30
+python .\python_demos\ising_magnetization_compare.py --rows 2 --cols 2 --steps 20 --seeds 30 --output-raw magnetization_timeseries.csv --output-summary magnetization_summary.csv
 ```
 
 The raw file stores `m(t)` per model/seed, and the summary file stores mean/variance of `m` at each `(model, J, h, T, t)` grid point.
@@ -59,7 +59,7 @@ The raw file stores `m(t)` per model/seed, and the summary file stores mean/vari
 Fit `phi_{i->j}` by nearest-neighbor manifold matching with an affine approximation:
 
 ```bash
-python fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2
+python fit_parameter_map.py --summary-csv magnetization_summary.csv --source-model model_1 --target-model model_2 --output-map parameter_map.csv --output-affine parameter_map_affine.json
 ```
 
 ## Manifold plotting
@@ -67,41 +67,12 @@ python fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 -
 Render trajectory bands and residual maps from generated CSVs:
 
 ```bash
-python plot_magnetization_manifold.py --artifact-prefix artifacts --source-model model_1 --target-model model_2
+python plot_magnetization_manifold.py --summary-csv magnetization_summary.csv --map-csv parameter_map.csv --source-model model_1 --target-model model_2 --output-traj traj_bands.png --output-residual residual_map.png
 ```
-
-## Trajectory matching visualization
-
-Compare source vs mapped-target trajectories for seeds with similar initial up-spin fraction, and produce evaluation artifacts:
-
-```bash
-python visualize_trajectory_matching.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --coupling 0.7 --field 0.0 --temperature 1.0
-```
-
-This reports mapped parameters for each model and writes two figures: (1) seed-level trajectory overlay + means, (2) fit-error histogram + time-resolved manifold residual.
-
-## Explicit renormalization operator demo
-
-Compare `evolve_full_then_project` vs `project_then_evolve_coarse` and report residuals:
-
-```bash
-python renormalization_operator_demo.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seed 7
-```
-
-This writes a per-time residual CSV and (optionally) a two-panel plot of trajectories and absolute residuals.
 
 ## Notebook walkthrough
 
-Open `notebooks/renormalization_demo.ipynb` for a pedagogical side-by-side projection + residual workflow.
-
-## End-to-end pipeline
-
-Run the full report-oriented workflow in one command:
-
-```bash
-python run_report_pipeline.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seeds 30
-# add --skip-plots if matplotlib is unavailable
-```
+Open `renormalization_demo.ipynb` for a pedagogical side-by-side projection + residual workflow.
 
 ## Testing
 
