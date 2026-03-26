@@ -83,7 +83,7 @@ def trajectory_magnetizations(
     steps: int,
     seed: int,
     mixing: float,
-) -> Tuple[Dict[str, List[float]], int, float]:
+) -> Dict[str, List[float]]:
     n_atoms = rows * cols
     rng = random.Random(seed)
     start = tuple(rng.choice([-1, 1]) for _ in range(n_atoms))
@@ -109,30 +109,17 @@ def trajectory_magnetizations(
     )
     model4 = model_4_heatmap_trajectory(start=start, params=params, edges=edges, steps=steps, n_cols=cols)
 
-    trajectories = {
+    return {
         "model_1": [mean_grid_value(frame) for frame in model1],
         "model_2": [mean_grid_value(frame) for frame in model2],
         "model_3": [mean_grid_value(frame) for frame in model3],
         "model_4": [mean_grid_value(frame) for frame in model4],
     }
-    up_count = sum(1 for s in start if s == 1)
-    up_fraction = up_count / n_atoms
-    return trajectories, up_count, up_fraction
 
 
 def write_raw(path: Path, rows: Iterable[Dict[str, float]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "model",
-        "coupling",
-        "field",
-        "temperature",
-        "seed",
-        "initial_up_count",
-        "initial_up_fraction",
-        "t",
-        "m",
-    ]
+    fieldnames = ["model", "coupling", "field", "temperature", "seed", "t", "m"]
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -196,7 +183,7 @@ def main() -> None:
         params = IsingParams(temperature=temperature, coupling=coupling, field=field)
         for seed in range(args.seeds):
             job_idx += 1
-            traj, up_count, up_fraction = trajectory_magnetizations(
+            traj = trajectory_magnetizations(
                 params=params,
                 rows=args.rows,
                 cols=args.cols,
@@ -213,8 +200,6 @@ def main() -> None:
                             "field": field,
                             "temperature": temperature,
                             "seed": seed,
-                            "initial_up_count": up_count,
-                            "initial_up_fraction": up_fraction,
                             "t": t,
                             "m": m,
                         }

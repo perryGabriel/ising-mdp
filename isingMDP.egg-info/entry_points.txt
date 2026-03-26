@@ -1,0 +1,3 @@
+[console_scripts]
+ising-four-models = python_demos.ising_four_models:demo_entry
+ising-heatmap-gif = python_demos.ising_heatmap_gif:main
