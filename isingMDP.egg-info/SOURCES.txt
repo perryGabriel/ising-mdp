@@ -7,17 +7,3 @@ isingMDP.egg-info/entry_points.txt
 isingMDP.egg-info/requires.txt
 isingMDP.egg-info/top_level.txt
 isingmdp/__init__.py
-python_demos/__init__.py
-python_demos/fit_parameter_map.py
-python_demos/generate_figure_manifest.py
-python_demos/ising_heatmap_gif.py
-python_demos/ising_magnetization_compare.py
-python_demos/plot_magnetization_manifold.py
-python_demos/renormalization_operator_demo.py
-python_demos/run_report_pipeline.py
-python_demos/test_fit_parameter_map.py
-python_demos/test_magnetization_compare.py
-python_demos/test_renorm_and_manifest.py
-python_demos/test_run_report_pipeline.py
-python_demos/test_visualize_matching.py
-python_demos/visualize_trajectory_matching.py
