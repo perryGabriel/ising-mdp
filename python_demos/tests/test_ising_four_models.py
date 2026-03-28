@@ -1,10 +1,29 @@
 """Tests for Ising demo models and heatmap helpers."""
 
+import math
+import sys
 import unittest
+from pathlib import Path
 
 try:
-    from python_demos.ising_four_models import (
+    import isingmdp
+except ModuleNotFoundError:
+    # Allow direct execution from inside python_demos/ without installation.
+    repo_root = Path(__file__).resolve().parents[2]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+    import isingmdp
+
+try:
+    from python_demos.stage1_generate.ising_heatmap_gif import build_parser as build_gif_parser
+except ModuleNotFoundError:
+    from python_demos.stage1_generate.ising_heatmap_gif import build_parser as build_gif_parser  # type: ignore
+
+try:
+    from python_demos.foundation.ising_four_models import (
         IsingParams,
+        build_parser,
+        grid_edges,
         model_1_heatmap_trajectory,
         model_1_single_spin,
         model_2_heatmap_trajectory,
@@ -14,10 +33,13 @@ try:
         model_4_full_state_space,
         model_4_heatmap_trajectory,
         probs_to_state_distribution,
+        MAX_ATOMS,
     )
 except ModuleNotFoundError:
-    from ising_four_models import (  # type: ignore
+    from python_demos.foundation.ising_four_models import (  # type: ignore
         IsingParams,
+        build_parser,
+        grid_edges,
         model_1_heatmap_trajectory,
         model_1_single_spin,
         model_2_heatmap_trajectory,
@@ -27,11 +49,15 @@ except ModuleNotFoundError:
         model_4_full_state_space,
         model_4_heatmap_trajectory,
         probs_to_state_distribution,
+        MAX_ATOMS,
     )
 
 
 class IsingDemoTests(unittest.TestCase):
     """Covers normalization, bounds, and heatmap frame shapes."""
+
+    def test_top_level_package_import_smoke(self):
+        self.assertTrue(hasattr(isingmdp, "model_2_mean_field"))
 
     def test_model_1_distribution_sums_to_one(self):
         params = IsingParams(temperature=1.0, coupling=0.5, field=0.1)
@@ -42,6 +68,12 @@ class IsingDemoTests(unittest.TestCase):
         params = IsingParams(temperature=1.0, coupling=0.5, field=0.0)
         dist = model_2_mean_field(8, params, {4: 1.0})
         self.assertAlmostEqual(sum(dist.values()), 1.0)
+
+    def test_model_2_mean_field_uses_tanh_magnetization_update(self):
+        params = IsingParams(temperature=1.0, coupling=0.0, field=0.4)
+        dist = model_2_mean_field(10, params, {5: 1.0})
+        next_m = sum(((2 * k - 10) / 10) * p for k, p in dist.items())
+        self.assertAlmostEqual(next_m, math.tanh(0.4), places=6)
 
     def test_model_3_stays_bounded(self):
         params = IsingParams(temperature=0.8, coupling=0.7, field=0.2)
@@ -105,6 +137,72 @@ class IsingDemoTests(unittest.TestCase):
         for frame in traj:
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
+
+    def test_exp_atoms_capped_by_global_max(self):
+        parser = build_parser()
+        args = parser.parse_args(["--exp-atoms", str(MAX_ATOMS + 5)])
+        self.assertEqual(min(args.exp_atoms, MAX_ATOMS), MAX_ATOMS)
+
+    def test_model_4_supports_4x4_lattice(self):
+        params = IsingParams(temperature=1.0, coupling=0.6, field=0.0)
+        rows, cols = 4, 4
+        start = tuple([1, -1] * 8)
+        traj = model_4_heatmap_trajectory(
+            start=start,
+            params=params,
+            edges=grid_edges(rows, cols),
+            steps=1,
+            n_cols=cols,
+        )
+        self.assertEqual(len(traj), 2)
+        self.assertEqual(len(traj[0]), rows)
+        self.assertEqual(len(traj[0][0]), cols)
+
+    def test_heatmap_gif_parser_accepts_layout_seed_and_intro_controls(self):
+        parser = build_gif_parser()
+        args = parser.parse_args([
+            "--rows", "2", "--cols", "2", "--seed", "7", "--hold-frames", "4", "--intro-label-frames", "6"
+        ])
+        self.assertEqual(args.rows, 2)
+        self.assertEqual(args.cols, 2)
+        self.assertEqual(args.seed, 7)
+        self.assertEqual(args.hold_frames, 4)
+        self.assertEqual(args.intro_label_frames, 6)
+
+    def test_all_model_trajectories_can_share_common_lattice_shape(self):
+        params = IsingParams()
+        start = (1, -1, 1, -1)
+        rows, cols = 2, 2
+
+        model1 = model_1_heatmap_trajectory(params=params, steps=2, initial_spins=start, n_cols=cols)
+        model2 = model_2_heatmap_trajectory(
+            n_spins=len(start),
+            params=params,
+            steps=2,
+            n_rows=rows,
+            n_cols=cols,
+            initial_k_dist={2: 1.0},
+        )
+        model3 = model_3_heatmap_trajectory(
+            initial_probs=[1.0 if s == 1 else 0.0 for s in start],
+            params=params,
+            steps=2,
+            n_rows=rows,
+            n_cols=cols,
+        )
+        model4 = model_4_heatmap_trajectory(
+            start=start,
+            params=params,
+            edges=grid_edges(rows, cols),
+            steps=2,
+            n_cols=cols,
+        )
+
+        for traj in [model1, model2, model3, model4]:
+            self.assertEqual(len(traj), 3)
+            for frame in traj:
+                self.assertEqual(len(frame), rows)
+                self.assertEqual(len(frame[0]), cols)
 
 if __name__ == "__main__":
     unittest.main()
