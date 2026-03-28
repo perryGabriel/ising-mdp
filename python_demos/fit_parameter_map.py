@@ -25,14 +25,13 @@ ParamPoint = Tuple[float, float, float]  # (J, h, T)
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fit parameter map phi_{i->j} from manifold summaries.")
-    parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
-    parser.add_argument("--summary-csv", default=None)
+    parser.add_argument("--summary-csv", default="python_demos/magnetization_summary.csv")
     parser.add_argument("--source-model", default="model_1")
     parser.add_argument("--target-model", default="model_2")
     parser.add_argument("--mean-weight", type=float, default=1.0)
     parser.add_argument("--var-weight", type=float, default=0.3)
-    parser.add_argument("--output-map", default=None)
-    parser.add_argument("--output-affine", default=None)
+    parser.add_argument("--output-map", default="python_demos/parameter_map.csv")
+    parser.add_argument("--output-affine", default="python_demos/parameter_map_affine.json")
     return parser.parse_args()
 
 
@@ -190,19 +189,7 @@ def write_affine_json(path: Path, coeffs: Dict[str, List[float]], source_model: 
 
 def main() -> None:
     args = parse_args()
-    summary_csv = (
-        Path(args.summary_csv)
-        if args.summary_csv
-        else Path(args.artifact_prefix) / "data" / "summary" / "magnetization_summary.csv"
-    )
-    output_map = Path(args.output_map) if args.output_map else Path(args.artifact_prefix) / "maps" / "parameter_map.csv"
-    output_affine = (
-        Path(args.output_affine)
-        if args.output_affine
-        else Path(args.artifact_prefix) / "maps" / "parameter_map_affine.json"
-    )
-
-    manifold = load_manifold(summary_csv)
+    manifold = load_manifold(Path(args.summary_csv))
 
     match_rows = fit_nearest_neighbor_map(
         manifold=manifold,
@@ -211,14 +198,14 @@ def main() -> None:
         mean_w=args.mean_weight,
         var_w=args.var_weight,
     )
-    write_map_csv(output_map, match_rows)
+    write_map_csv(Path(args.output_map), match_rows)
 
     coeffs = fit_affine_coefficients(match_rows)
-    write_affine_json(output_affine, coeffs, args.source_model, args.target_model)
+    write_affine_json(Path(args.output_affine), coeffs, args.source_model, args.target_model)
 
     mean_err = sum(row["fit_error"] for row in match_rows) / max(1, len(match_rows))
-    print(f"Wrote nearest-neighbor map to {output_map}")
-    print(f"Wrote affine approximation to {output_affine}")
+    print(f"Wrote nearest-neighbor map to {args.output_map}")
+    print(f"Wrote affine approximation to {args.output_affine}")
     print(f"Mean fit error: {mean_err:.6f} across {len(match_rows)} source points")
 
 

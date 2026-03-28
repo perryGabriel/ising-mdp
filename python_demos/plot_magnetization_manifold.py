@@ -13,9 +13,8 @@ from typing import Dict, List, Tuple
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Plot manifold trajectory bands and parameter-map residuals.")
-    parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
-    parser.add_argument("--summary-csv", default=None)
-    parser.add_argument("--map-csv", default=None)
+    parser.add_argument("--summary-csv", default="python_demos/magnetization_summary.csv")
+    parser.add_argument("--map-csv", default="python_demos/parameter_map.csv")
 
     parser.add_argument("--coupling", type=float, default=0.7)
     parser.add_argument("--field", type=float, default=0.0)
@@ -24,8 +23,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-model", default="model_1")
     parser.add_argument("--target-model", default="model_2")
 
-    parser.add_argument("--output-traj", default=None)
-    parser.add_argument("--output-residual", default=None)
+    parser.add_argument("--output-traj", default="python_demos/magnetization_trajectory_bands.png")
+    parser.add_argument("--output-residual", default="python_demos/magnetization_residual_map.png")
     return parser.parse_args()
 
 
@@ -129,39 +128,22 @@ def plot_residual_map(map_csv: Path, source_model: str, target_model: str, outpu
 
 def main() -> None:
     args = parse_args()
-    summary_csv = (
-        Path(args.summary_csv)
-        if args.summary_csv
-        else Path(args.artifact_prefix) / "data" / "summary" / "magnetization_summary.csv"
-    )
-    map_csv = Path(args.map_csv) if args.map_csv else Path(args.artifact_prefix) / "maps" / "parameter_map.csv"
-    output_traj = (
-        Path(args.output_traj)
-        if args.output_traj
-        else Path(args.artifact_prefix) / "plots" / "magnetization_trajectory_bands.png"
-    )
-    output_residual = (
-        Path(args.output_residual)
-        if args.output_residual
-        else Path(args.artifact_prefix) / "plots" / "magnetization_residual_map.png"
-    )
-
     plot_trajectory_bands(
-        summary_csv=summary_csv,
+        summary_csv=Path(args.summary_csv),
         coupling=args.coupling,
         field=args.field,
         temperature=args.temperature,
-        output_path=output_traj,
+        output_path=Path(args.output_traj),
     )
     plot_residual_map(
-        map_csv=map_csv,
+        map_csv=Path(args.map_csv),
         source_model=args.source_model,
         target_model=args.target_model,
-        output_path=output_residual,
+        output_path=Path(args.output_residual),
     )
 
-    print(f"Wrote trajectory plot to {output_traj}")
-    print(f"Wrote residual map to {output_residual}")
+    print(f"Wrote trajectory plot to {args.output_traj}")
+    print(f"Wrote residual map to {args.output_residual}")
 
 
 if __name__ == "__main__":

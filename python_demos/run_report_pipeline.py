@@ -117,17 +117,6 @@ def main() -> None:
         ]
     )
 
-    run(
-        [
-            sys.executable,
-            "python_demos/generate_figure_manifest.py",
-            "--artifact-prefix",
-            args.artifact_prefix,
-            "--output",
-            "reports/figure_manifest.json",
-        ]
-    )
-
     print("Pipeline complete. See artifacts/ and reports/ for outputs and structure.")
 
 

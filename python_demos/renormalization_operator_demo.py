@@ -36,7 +36,6 @@ except ModuleNotFoundError:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Demonstrate projection/evolution order for renormalization.")
-    parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
     parser.add_argument("--rows", type=int, default=2)
     parser.add_argument("--cols", type=int, default=2)
     parser.add_argument("--steps", type=int, default=20)
@@ -44,8 +43,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--coupling", type=float, default=0.8)
     parser.add_argument("--field", type=float, default=0.1)
-    parser.add_argument("--output-csv", default=None)
-    parser.add_argument("--output-plot", default=None)
+    parser.add_argument("--output-csv", default="python_demos/renormalization_operator.csv")
+    parser.add_argument("--output-plot", default="python_demos/renormalization_operator.png")
     parser.add_argument("--no-plot", action="store_true")
     return parser
 
@@ -72,17 +71,6 @@ def coarse_evolution_from_m0(n_spins: int, params: IsingParams, m0: float, steps
 
 def main() -> None:
     args = build_parser().parse_args()
-
-    output_csv = (
-        Path(args.output_csv)
-        if args.output_csv
-        else Path(args.artifact_prefix) / "operator" / "renormalization_operator.csv"
-    )
-    output_plot = (
-        Path(args.output_plot)
-        if args.output_plot
-        else Path(args.artifact_prefix) / "operator" / "renormalization_operator.png"
-    )
 
     if args.rows <= 0 or args.cols <= 0:
         raise SystemExit("--rows and --cols must be positive")
@@ -116,8 +104,9 @@ def main() -> None:
             }
         )
 
-    output_csv.parent.mkdir(parents=True, exist_ok=True)
-    with output_csv.open("w", newline="", encoding="utf-8") as f:
+    out_csv = Path(args.output_csv)
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    with out_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
             fieldnames=["t", "m_full_then_project", "m_project_then_coarse", "abs_residual"],
@@ -128,7 +117,7 @@ def main() -> None:
 
     mean_residual = sum(row["abs_residual"] for row in rows) / len(rows)
     print(f"Start state: {start}")
-    print(f"Wrote operator comparison CSV to {output_csv}")
+    print(f"Wrote operator comparison CSV to {out_csv}")
     print(f"Mean absolute residual over time: {mean_residual:.6f}")
 
     if args.no_plot:
@@ -157,10 +146,11 @@ def main() -> None:
     axes[1].set_xlabel("t")
     axes[1].set_ylabel("|Δm|")
 
-    output_plot.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_plot, dpi=170)
+    out_plot = Path(args.output_plot)
+    out_plot.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_plot, dpi=170)
     plt.close(fig)
-    print(f"Wrote operator comparison plot to {output_plot}")
+    print(f"Wrote operator comparison plot to {out_plot}")
 
 
 if __name__ == "__main__":

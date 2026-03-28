@@ -59,9 +59,8 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--mixing", type=float, default=0.2)
 
-    parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
-    parser.add_argument("--output-raw", default=None)
-    parser.add_argument("--output-summary", default=None)
+    parser.add_argument("--output-raw", default="python_demos/magnetization_timeseries.csv")
+    parser.add_argument("--output-summary", default="python_demos/magnetization_summary.csv")
     return parser.parse_args()
 
 
@@ -84,7 +83,7 @@ def trajectory_magnetizations(
     steps: int,
     seed: int,
     mixing: float,
-) -> Tuple[Dict[str, List[float]], int, float]:
+) -> Dict[str, List[float]]:
     n_atoms = rows * cols
     rng = random.Random(seed)
     start = tuple(rng.choice([-1, 1]) for _ in range(n_atoms))
@@ -110,30 +109,17 @@ def trajectory_magnetizations(
     )
     model4 = model_4_heatmap_trajectory(start=start, params=params, edges=edges, steps=steps, n_cols=cols)
 
-    trajectories = {
+    return {
         "model_1": [mean_grid_value(frame) for frame in model1],
         "model_2": [mean_grid_value(frame) for frame in model2],
         "model_3": [mean_grid_value(frame) for frame in model3],
         "model_4": [mean_grid_value(frame) for frame in model4],
     }
-    up_count = sum(1 for s in start if s == 1)
-    up_fraction = up_count / n_atoms
-    return trajectories, up_count, up_fraction
 
 
 def write_raw(path: Path, rows: Iterable[Dict[str, float]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "model",
-        "coupling",
-        "field",
-        "temperature",
-        "seed",
-        "initial_up_count",
-        "initial_up_fraction",
-        "t",
-        "m",
-    ]
+    fieldnames = ["model", "coupling", "field", "temperature", "seed", "t", "m"]
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -180,17 +166,6 @@ def write_summary(path: Path, raw_rows: Sequence[Dict[str, float]]) -> None:
 def main() -> None:
     args = parse_args()
 
-    output_raw = (
-        Path(args.output_raw)
-        if args.output_raw
-        else Path(args.artifact_prefix) / "data" / "raw" / "magnetization_timeseries.csv"
-    )
-    output_summary = (
-        Path(args.output_summary)
-        if args.output_summary
-        else Path(args.artifact_prefix) / "data" / "summary" / "magnetization_summary.csv"
-    )
-
     if args.rows <= 0 or args.cols <= 0:
         raise SystemExit("--rows and --cols must be positive")
     if args.rows * args.cols > 9:
@@ -208,7 +183,7 @@ def main() -> None:
         params = IsingParams(temperature=temperature, coupling=coupling, field=field)
         for seed in range(args.seeds):
             job_idx += 1
-            traj, up_count, up_fraction = trajectory_magnetizations(
+            traj = trajectory_magnetizations(
                 params=params,
                 rows=args.rows,
                 cols=args.cols,
@@ -225,8 +200,6 @@ def main() -> None:
                             "field": field,
                             "temperature": temperature,
                             "seed": seed,
-                            "initial_up_count": up_count,
-                            "initial_up_fraction": up_fraction,
                             "t": t,
                             "m": m,
                         }
@@ -235,11 +208,11 @@ def main() -> None:
             if job_idx % max(1, total_jobs // 10) == 0:
                 print(f"Progress: {job_idx}/{total_jobs} parameter-seed runs")
 
-    write_raw(output_raw, raw_rows)
-    write_summary(output_summary, raw_rows)
+    write_raw(Path(args.output_raw), raw_rows)
+    write_summary(Path(args.output_summary), raw_rows)
 
-    print(f"Wrote raw trajectories to {output_raw}")
-    print(f"Wrote summary manifold to {output_summary}")
+    print(f"Wrote raw trajectories to {args.output_raw}")
+    print(f"Wrote summary manifold to {args.output_summary}")
 
 
 if __name__ == "__main__":
