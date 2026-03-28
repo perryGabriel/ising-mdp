@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Core simulation and visualization helpers for four Ising-inspired models.
+"""Core simulation and visualization helpers for Ising-inspired models.
 
 This module includes:
 1) A single-spin two-state chain.
 2) A mean-field chain over K=#(up spins).
 3) A local-neighborhood probability model on an arbitrary rows x cols lattice.
 4) A full exponential-state Gibbs model (recommended with N<=16).
+5) A restricted-interval affine operator model over per-site spin probabilities.
 
 It also exposes convenience trajectory builders for terminal demos and heatmaps.
 """
@@ -170,6 +171,11 @@ def model_2_mean_field(
 
     The model evolves only the mean magnetization m_t, then projects the result
     back to a narrow K distribution that preserves E[K].
+
+    If you are looking for the proposal equation written directly in terms of
+    (J, T, h) and magnetization m_t, this is the corresponding implementation:
+        m_{t+1} = tanh((J * m_t + h) / T)
+    implemented numerically as tanh(beta * (J * m_t + h)) with beta = 1/T.
     """
 
     beta = 1.0 / max(params.temperature, 1e-6)
@@ -322,7 +328,14 @@ def ising_energy(state: State, params: IsingParams, edges: Sequence[Tuple[int, i
 
 
 def gibbs_next_distribution(state: State, params: IsingParams, edges: Sequence[Tuple[int, int]]) -> Distribution:
-    """Return one-step random-site Gibbs transition distribution from a state."""
+    """Return one-step random-site Gibbs transition distribution from a state.
+
+    This is the state-level single-site Gibbs conditional:
+    P(s_i=+1 | neighbors) = logistic(2*beta*(J*sum_neighbors + h)).
+
+    Note: if the proposal equation is the magnetization-only mean-field update
+    m_{t+1} = tanh((J*m_t + h)/T), that is implemented by model_2_mean_field.
+    """
 
     n = len(state)
     beta = 1.0 / max(params.temperature, 1e-6)
@@ -384,6 +397,85 @@ def model_4_heatmap_trajectory(
 
     dist_traj = model_4_full_state_space(start=start, params=params, edges=edges, steps=steps)
     return [spins_to_grid(expected_site_magnetization(dist), n_cols=n_cols) for dist in dist_traj]
+
+
+# ------------------------------------------------------------
+# Model 5: restricted-interval affine operator (proposal form)
+# ------------------------------------------------------------
+def clamp_params_restricted_interval(params: IsingParams) -> IsingParams:
+    """Clamp parameters to the model-5 restricted intervals."""
+
+    return IsingParams(
+        temperature=max(0.0, min(1.0, params.temperature)),
+        coupling=max(-1.0, min(1.0, params.coupling)),
+        field=max(-1.0, min(1.0, params.field)),
+    )
+
+
+def model_5_restricted_interval_probabilities(
+    current_probs: Sequence[float],
+    params: IsingParams,
+    n_rows: int = 2,
+    n_cols: int = 2,
+) -> List[float]:
+    """Advance p_i(+1) with the restricted-interval operator from the proposal image."""
+
+    if len(current_probs) != n_rows * n_cols:
+        raise ValueError("current_probs length must equal n_rows * n_cols")
+
+    p = clamp_params_restricted_interval(params)
+    j = p.coupling
+    h = p.field
+    t = p.temperature
+    abs_h = abs(h)
+
+    next_probs: List[float] = []
+    for i, p_up_i in enumerate(current_probs):
+        p_down_i = 1.0 - p_up_i
+        one_block_sum = p_up_i + p_down_i
+
+        one_up = 0.5 * one_block_sum
+        one_down = 0.5 * one_block_sum
+        h_up = ((1.0 + h) / 2.0) * one_block_sum
+        h_down = ((1.0 - h) / 2.0) * one_block_sum
+
+        neighbors = grid_neighbors(i, n_rows=n_rows, n_cols=n_cols) if j != 0.0 else []
+        j_star_up = 0.5
+        j_star_down = 0.5
+        if neighbors:
+            acc_up = 0.0
+            acc_down = 0.0
+            for n_idx in neighbors:
+                p_up_j = current_probs[n_idx]
+                p_down_j = 1.0 - p_up_j
+                acc_up += ((1.0 + j) / 2.0) * p_up_j + ((1.0 - j) / 2.0) * p_down_j
+                acc_down += ((1.0 - j) / 2.0) * p_up_j + ((1.0 + j) / 2.0) * p_down_j
+            deg = float(len(neighbors))
+            j_star_up = acc_up / deg
+            j_star_down = acc_down / deg
+
+        next_up = (t / 2.0) * one_up + (1.0 - t) * (abs_h * h_up + (1.0 - abs_h) * j_star_up)
+        next_down = (t / 2.0) * one_down + (1.0 - t) * (abs_h * h_down + (1.0 - abs_h) * j_star_down)
+        norm = max(1e-12, next_up + next_down)
+        next_probs.append(max(0.0, min(1.0, next_up / norm)))
+    return next_probs
+
+
+def model_5_heatmap_trajectory(
+    initial_probs: Sequence[float],
+    params: IsingParams,
+    steps: int,
+    n_rows: int = 2,
+    n_cols: int = 2,
+) -> List[List[List[float]]]:
+    """Return trajectory of model-5 expected spins as heatmap frames."""
+
+    probs = list(initial_probs)
+    frames: List[List[List[float]]] = [spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols)]
+    for _ in range(steps):
+        probs = model_5_restricted_interval_probabilities(probs, params=params, n_rows=n_rows, n_cols=n_cols)
+        frames.append(spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols))
+    return frames
 
 
 def print_model_header(name: str) -> None:

@@ -10,6 +10,7 @@ from python_demos.stage3_analyze.visualize_trajectory_matching import (
     mean_series,
     nearest_map_row,
     select_seed_keys,
+    select_seed_keys_relaxed,
 )
 
 
@@ -66,6 +67,9 @@ class VisualizeMatchingTests(unittest.TestCase):
             ts, mu = mean_series(selected, series)
             self.assertEqual(ts, [0, 1])
             self.assertEqual(len(mu), 2)
+
+            selected_relaxed = select_seed_keys_relaxed(series, init_frac, "model_1", 0.2, 0.0, 1.0, 0.7, 10)
+            self.assertEqual(len(selected_relaxed), 2)
 
 
 if __name__ == "__main__":

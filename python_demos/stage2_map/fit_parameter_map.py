@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
@@ -33,6 +34,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--var-weight", type=float, default=0.3)
     parser.add_argument("--output-map", default=None)
     parser.add_argument("--output-affine", default=None)
+    parser.add_argument(
+        "--fit-space",
+        choices=["raw", "tanh-normalized"],
+        default="raw",
+        help="Fit affine coefficients in raw parameter space or in tanh/arctanh normalized space.",
+    )
+    parser.add_argument("--coupling-min", type=float, default=-1.0)
+    parser.add_argument("--coupling-max", type=float, default=1.0)
+    parser.add_argument("--field-min", type=float, default=-1.0)
+    parser.add_argument("--field-max", type=float, default=1.0)
+    parser.add_argument("--temperature-min", type=float, default=0.0)
+    parser.add_argument("--temperature-max", type=float, default=1.0)
     return parser.parse_args()
 
 
@@ -159,6 +172,59 @@ def fit_affine_coefficients(match_rows: Sequence[Dict[str, float]]) -> Dict[str,
     }
 
 
+def _bounded_to_real(value: float, low: float, high: float, eps: float = 1e-6) -> float:
+    """Map [low, high] to R using arctanh after affine normalization."""
+
+    if high <= low:
+        raise ValueError("Invalid bounds: high must be greater than low")
+    scaled = 2.0 * (value - low) / (high - low) - 1.0
+    clipped = max(-1.0 + eps, min(1.0 - eps, scaled))
+    return math.atanh(clipped)
+
+
+def _real_to_bounded(value: float, low: float, high: float) -> float:
+    """Map R back to [low, high] using tanh after inverse affine scaling."""
+
+    if high <= low:
+        raise ValueError("Invalid bounds: high must be greater than low")
+    scaled = math.tanh(value)
+    return low + (scaled + 1.0) * 0.5 * (high - low)
+
+
+def fit_affine_coefficients_tanh_normalized(
+    match_rows: Sequence[Dict[str, float]],
+    bounds: Dict[str, Tuple[float, float]],
+) -> Dict[str, List[float]]:
+    """Fit affine map in arctanh-normalized space and return transformed-space coeffs."""
+
+    x_rows = [
+        [
+            1.0,
+            _bounded_to_real(row["source_coupling"], *bounds["coupling"]),
+            _bounded_to_real(row["source_field"], *bounds["field"]),
+            _bounded_to_real(row["source_temperature"], *bounds["temperature"]),
+        ]
+        for row in match_rows
+    ]
+
+    def normal_eq(y_key: str, bound_key: str) -> List[float]:
+        xtx = [[0.0 for _ in range(4)] for _ in range(4)]
+        xty = [0.0 for _ in range(4)]
+        for x, row in zip(x_rows, match_rows):
+            y = _bounded_to_real(row[y_key], *bounds[bound_key])
+            for i in range(4):
+                xty[i] += x[i] * y
+                for j in range(4):
+                    xtx[i][j] += x[i] * x[j]
+        return solve_linear_4x4(xtx, xty)
+
+    return {
+        "target_coupling": normal_eq("target_coupling", "coupling"),
+        "target_field": normal_eq("target_field", "field"),
+        "target_temperature": normal_eq("target_temperature", "temperature"),
+    }
+
+
 def write_map_csv(path: Path, rows: Iterable[Dict[str, float]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
@@ -177,13 +243,23 @@ def write_map_csv(path: Path, rows: Iterable[Dict[str, float]]) -> None:
             writer.writerow(row)
 
 
-def write_affine_json(path: Path, coeffs: Dict[str, List[float]], source_model: str, target_model: str) -> None:
+def write_affine_json(
+    path: Path,
+    coeffs: Dict[str, List[float]],
+    source_model: str,
+    target_model: str,
+    fit_space: str = "raw",
+    bounds: Dict[str, Tuple[float, float]] | None = None,
+) -> None:
     payload = {
         "source_model": source_model,
         "target_model": target_model,
         "features": ["bias", "source_coupling", "source_field", "source_temperature"],
         "coefficients": coeffs,
+        "fit_space": fit_space,
     }
+    if bounds is not None:
+        payload["bounds"] = {k: [v[0], v[1]] for k, v in bounds.items()}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
@@ -203,6 +279,11 @@ def main() -> None:
     )
 
     manifold = load_manifold(summary_csv)
+    bounds = {
+        "coupling": (args.coupling_min, args.coupling_max),
+        "field": (args.field_min, args.field_max),
+        "temperature": (args.temperature_min, args.temperature_max),
+    }
 
     match_rows = fit_nearest_neighbor_map(
         manifold=manifold,
@@ -213,8 +294,25 @@ def main() -> None:
     )
     write_map_csv(output_map, match_rows)
 
-    coeffs = fit_affine_coefficients(match_rows)
-    write_affine_json(output_affine, coeffs, args.source_model, args.target_model)
+    if args.fit_space == "tanh-normalized":
+        coeffs = fit_affine_coefficients_tanh_normalized(match_rows, bounds=bounds)
+        write_affine_json(
+            output_affine,
+            coeffs,
+            args.source_model,
+            args.target_model,
+            fit_space=args.fit_space,
+            bounds=bounds,
+        )
+    else:
+        coeffs = fit_affine_coefficients(match_rows)
+        write_affine_json(
+            output_affine,
+            coeffs,
+            args.source_model,
+            args.target_model,
+            fit_space=args.fit_space,
+        )
 
     mean_err = sum(row["fit_error"] for row in match_rows) / max(1, len(match_rows))
     print(f"Wrote nearest-neighbor map to {output_map}")

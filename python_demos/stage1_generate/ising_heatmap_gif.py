@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate an animated GIF heatmap for all four Ising demo models."""
+"""Generate an animated GIF heatmap for selected Ising demo models."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ try:
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
+        model_5_heatmap_trajectory,
         grid_edges,
         MAX_ATOMS,
     )
@@ -24,6 +25,7 @@ except ModuleNotFoundError:
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
+        model_5_heatmap_trajectory,
         grid_edges,
         MAX_ATOMS,
     )
@@ -46,6 +48,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=7, help="Random seed for shared lattice initialization")
     parser.add_argument("--hold-frames", type=int, default=4, help="Extra initial-condition frames before dynamics")
     parser.add_argument("--intro-label-frames", type=int, default=6, help="Frames to show interpretation labels")
+    parser.add_argument(
+        "--models",
+        default="1,2,3,4,5",
+        help="Comma-separated model ids to include (subset of 1,2,3,4,5).",
+    )
     return parser
 
 
@@ -67,7 +74,11 @@ def main() -> None:
         raise SystemExit("--rows and --cols must both be positive integers.")
 
     n_atoms = args.rows * args.cols
-    if n_atoms > MAX_ATOMS:
+    selected_models = [m.strip() for m in args.models.split(",") if m.strip()]
+    if not selected_models or any(m not in {"1", "2", "3", "4", "5"} for m in selected_models):
+        raise SystemExit("--models must be a comma-separated subset of {1,2,3,4,5}")
+
+    if "4" in selected_models and n_atoms > MAX_ATOMS:
         raise SystemExit(f"rows*cols must be <= {MAX_ATOMS} for the full-state model to remain tractable.")
 
     rng = random.Random(args.seed)
@@ -75,64 +86,68 @@ def main() -> None:
     initial_probs = [1.0 if spin == 1 else 0.0 for spin in start]
     edges = grid_edges(args.rows, args.cols)
 
-    model1_frames = model_1_heatmap_trajectory(
-        params=params,
-        steps=args.steps,
-        initial_spins=start,
-        n_cols=args.cols,
-    )
-    model2_frames = model_2_heatmap_trajectory(
-        n_spins=n_atoms,
-        params=params,
-        steps=args.steps,
-        n_rows=args.rows,
-        n_cols=args.cols,
-        initial_k_dist={sum(1 for s in start if s == 1): 1.0},
-    )
-    model3_frames = model_3_heatmap_trajectory(
-        initial_probs=initial_probs,
-        params=params,
-        steps=args.steps,
-        mixing=args.mixing,
-        n_rows=args.rows,
-        n_cols=args.cols,
-    )
-    model4_frames = model_4_heatmap_trajectory(
-        start=start, params=params, edges=edges, steps=args.steps, n_cols=args.cols
-    )
+    model_frames: dict[str, list[list[list[float]]]] = {}
+    model_titles: dict[str, str] = {}
+    if "1" in selected_models:
+        model_frames["1"] = model_1_heatmap_trajectory(params=params, steps=args.steps, initial_spins=start, n_cols=args.cols)
+        model_titles["1"] = "Model 1: Independent-spin lattice"
+    if "2" in selected_models:
+        model_frames["2"] = model_2_heatmap_trajectory(
+            n_spins=n_atoms,
+            params=params,
+            steps=args.steps,
+            n_rows=args.rows,
+            n_cols=args.cols,
+            initial_k_dist={sum(1 for s in start if s == 1): 1.0},
+        )
+        model_titles["2"] = "Model 2: Mean-field lattice"
+    if "3" in selected_models:
+        model_frames["3"] = model_3_heatmap_trajectory(
+            initial_probs=initial_probs,
+            params=params,
+            steps=args.steps,
+            mixing=args.mixing,
+            n_rows=args.rows,
+            n_cols=args.cols,
+        )
+        model_titles["3"] = "Model 3: Local probs"
+    if "4" in selected_models:
+        model_frames["4"] = model_4_heatmap_trajectory(start=start, params=params, edges=edges, steps=args.steps, n_cols=args.cols)
+        model_titles["4"] = f"Model 4: Full state space ({args.rows}x{args.cols}, N={n_atoms})"
+    if "5" in selected_models:
+        model_frames["5"] = model_5_heatmap_trajectory(
+            initial_probs=initial_probs,
+            params=params,
+            steps=args.steps,
+            n_rows=args.rows,
+            n_cols=args.cols,
+        )
+        model_titles["5"] = "Model 5: Restricted-interval operator"
 
-    n_frames = min(len(model1_frames), len(model2_frames), len(model3_frames), len(model4_frames))
+    n_frames = min(len(model_frames[mid]) for mid in selected_models)
 
     hold_frames = max(0, args.hold_frames)
     total_frames = hold_frames + n_frames
 
-    fig, axes = plt.subplots(2, 2, figsize=(9, 9), constrained_layout=True)
+    n_panels = len(selected_models)
+    n_cols_plot = 2 if n_panels > 1 else 1
+    n_rows_plot = (n_panels + n_cols_plot - 1) // n_cols_plot
+    fig, axes = plt.subplots(n_rows_plot, n_cols_plot, figsize=(4.5 * n_cols_plot, 4.5 * n_rows_plot), constrained_layout=True)
     fig.suptitle("Ising model heatmaps over time", fontsize=12)
-    ax = axes.ravel()
+    ax = axes.ravel() if hasattr(axes, "ravel") else [axes]
 
-    im1 = ax[0].imshow(model1_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
-    im2 = ax[1].imshow(model2_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
-    im3 = ax[2].imshow(model3_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
-    im4 = ax[3].imshow(model4_frames[0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
+    images = []
+    for idx, model_id in enumerate(selected_models):
+        im = ax[idx].imshow(model_frames[model_id][0], vmin=-1.0, vmax=1.0, cmap="coolwarm", aspect="equal", animated=True)
+        ax[idx].set_title(model_titles[model_id])
+        ax[idx].set_box_aspect(1)
+        ax[idx].set_xticks([])
+        ax[idx].set_yticks([])
+        images.append(im)
+    for idx in range(len(selected_models), len(ax)):
+        ax[idx].set_visible(False)
 
-    ax[0].set_title("Model 1: Independent-spin lattice")
-    ax[1].set_title("Model 2: Mean-field lattice")
-    ax[2].set_title("Model 3: Local probs")
-    ax[3].set_title(f"Model 4: Full state space ({args.rows}x{args.cols}, N={n_atoms})")
-
-    for panel in ax:
-        panel.set_box_aspect(1)
-
-    ax[0].set_yticks([])
-    ax[0].set_xticks([])
-    ax[1].set_yticks([])
-    ax[1].set_xticks([])
-    ax[2].set_xticks([])
-    ax[2].set_yticks([])
-    ax[3].set_xticks([])
-    ax[3].set_yticks([])
-
-    cbar = fig.colorbar(im4, ax=ax.tolist(), fraction=0.03, pad=0.02)
+    cbar = fig.colorbar(images[-1], ax=[a for a in ax if a.get_visible()], fraction=0.03, pad=0.02)
     cbar.set_label("Scaled value in [-1, 1]")
 
     param_text = fig.text(
@@ -141,6 +156,7 @@ def main() -> None:
         (
             f"T={args.temperature:.3g} | J={args.coupling:.3g} | h={args.field:.3g} "
             f"| mixing={args.mixing:.3g} "
+            f"| models={','.join(selected_models)} "
             f"| lattice={args.rows}x{args.cols} | seed={args.seed}"
         ),
         ha="center",
@@ -158,10 +174,8 @@ def main() -> None:
 
     def update(frame_idx: int):
         model_idx = 0 if frame_idx < hold_frames else frame_idx - hold_frames
-        im1.set_data(model1_frames[model_idx])
-        im2.set_data(model2_frames[model_idx])
-        im3.set_data(model3_frames[model_idx])
-        im4.set_data(model4_frames[model_idx])
+        for im, model_id in zip(images, selected_models):
+            im.set_data(model_frames[model_id][model_idx])
 
         if frame_idx < hold_frames:
             step_text.set_text(f"step = 0 (initial hold {frame_idx + 1}/{hold_frames})")
@@ -174,7 +188,7 @@ def main() -> None:
         else:
             intro_text.set_visible(False)
 
-        return [im1, im2, im3, im4, step_text, param_text, intro_text]
+        return [*images, step_text, param_text, intro_text]
 
     animation = FuncAnimation(fig, update, frames=total_frames, interval=max(1, int(1000 / args.fps)), blit=True)
 
