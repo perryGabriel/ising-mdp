@@ -24,7 +24,7 @@ pip install -e .[viz]
 ## Run terminal demo
 
 ```bash
-ising-four-models --steps 4 --exp-atoms 4
+python .\python_demos\ising_four_models.py --steps 4 --exp-atoms 4
 ```
 
 ## Heatmap GIF animation
@@ -79,13 +79,13 @@ Open `renormalization_demo.ipynb` for a pedagogical side-by-side projection + re
 From repo root:
 
 ```bash
-python -m unittest python_demos/test_ising_four_models.py
+python -m unittest .\python_demos\test_ising_four_models.py
 ```
 
 From inside `python_demos/`:
 
 ```bash
-python test_ising_four_models.py
+python .\python_demos\test_ising_four_models.py
 ```
 
 All models use the same seeded random lattice initialization (`--seed`).

@@ -28,13 +28,20 @@ pip install -e .[viz]
 Run terminal simulations:
 
 ```bash
-python python_demos/ising_four_models.py --steps 4 --exp-atoms 4
+python .\python_demos\ising_four_models.py --steps 4 --exp-atoms 4
 ```
 
 Run tests:
 
 ```bash
-python -m unittest python_demos/test_ising_four_models.py
+python -m unittest .\python_demos\test_ising_four_models.py
+```
+
+
+Generate cross-model magnetization datasets (raw + summary manifold):
+
+```bash
+python .\python_demos\ising_magnetization_compare.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seeds 30 --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
 ```
 
 Generate animated heatmaps (all four models, with seeded shared lattice init for models 3/4):
