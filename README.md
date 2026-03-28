@@ -28,29 +28,29 @@ pip install -e .[viz]
 Run terminal simulations:
 
 ```bash
-python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 16
+python .\python_demos\ising_four_models.py --steps 4 --exp-atoms 4
 ```
 
 Run tests:
 
 ```bash
-python -m unittest .\python_demos\tests\test_ising_four_models.py
+python -m unittest .\python_demos\test_ising_four_models.py
 ```
 
 
 Generate cross-model magnetization datasets (raw + summary manifold):
 
 ```bash
-python .\python_demos\stage1_generate\ising_magnetization_compare.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seeds 30 --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
+python .\python_demos\ising_magnetization_compare.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seeds 30 --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
 ```
 
-Generate animated heatmaps (all four models on the same rows×cols lattice and shared seed):
+Generate animated heatmaps (all four models, with seeded shared lattice init for models 3/4):
 
 ```bash
-python .\python_demos\stage1_generate\ising_heatmap_gif.py --artifact-prefix artifacts --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --hold-frames 4 --intro-label-frames 6 --output artifacts/gifs/ising_heatmaps.gif
+python .\python_demos\ising_heatmap_gif.py --steps 20 --fps 4 --rows 2 --cols 2 --seed 7 --hold-frames 4 --intro-label-frames 6 --output python_demos/ising_heatmaps.gif
 ```
 
-The GIF includes all four models on the same lattice shape, all seeded from the same initial state:
+The GIF includes all four models, and models 3 and 4 share the same seeded 2x2 lattice initialization:
 
 1. Model 1 independent-spin lattice,
 2. Model 2 mean-field lattice,
@@ -85,12 +85,6 @@ The app renders four independent simulation panels, each with isolated controls 
 
 
 Model-translation deliverables now include:
-- `python_demos/stage2_map/fit_parameter_map.py` for `phi_{i->j}` fitting,
-- `python_demos/stage3_analyze/plot_magnetization_manifold.py` for trajectory bands + residual maps,
-- `python_demos/stage3_analyze/visualize_trajectory_matching.py` for mapped trajectory overlays + evaluation artifacts, and
-- `python_demos/stage3_analyze/renormalization_operator_demo.py` for explicit operator-order comparison,
-- `python_demos/stage4_report/run_report_pipeline.py` for one-command phase execution, and
-- `notebooks/renormalization_demo.ipynb` for a walkthrough notebook.
-
-
-Generated outputs are organized under `artifacts/` with per-phase subfolders and README guides.
+- `python_demos/fit_parameter_map.py` for `phi_{i->j}` fitting,
+- `python_demos/plot_magnetization_manifold.py` for trajectory bands + residual maps, and
+- `python_demos/renormalization_demo.ipynb` for a walkthrough notebook.
