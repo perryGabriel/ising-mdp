@@ -1,1 +1,2 @@
+isingmdp
 python_demos
