@@ -117,6 +117,27 @@ def select_seed_keys(
     return filtered[:max_seeds]
 
 
+def select_seed_keys_relaxed(
+    all_series: Dict[RawKey, Dict[int, float]],
+    init_frac: Dict[RawKey, float],
+    model: str,
+    c: float,
+    h: float,
+    temp: float,
+    target_init_frac: float,
+    max_seeds: int,
+) -> List[RawKey]:
+    """Select closest seeds at exact parameters without tolerance filtering."""
+
+    candidates = [
+        key
+        for key in all_series.keys()
+        if key[0] == model and abs(key[1] - c) < 1e-9 and abs(key[2] - h) < 1e-9 and abs(key[3] - temp) < 1e-9
+    ]
+    candidates.sort(key=lambda k: abs(init_frac.get(k, 0.5) - target_init_frac))
+    return candidates[:max_seeds]
+
+
 def mean_series(keys: List[RawKey], all_series: Dict[RawKey, Dict[int, float]]) -> Tuple[List[int], List[float]]:
     if not keys:
         return [], []
@@ -208,25 +229,76 @@ def main() -> None:
     )
 
     if not source_keys or not target_keys:
-        raise SystemExit(
-            "No matching seed trajectories found; increase --init-up-frac-tol or regenerate raw CSV with more seeds."
+        source_keys = source_keys or select_seed_keys_relaxed(
+            all_series=raw,
+            init_frac=init_frac,
+            model=args.source_model,
+            c=args.coupling,
+            h=args.field,
+            temp=args.temperature,
+            target_init_frac=target_init_frac,
+            max_seeds=args.max_seeds,
         )
+        target_keys = target_keys or select_seed_keys_relaxed(
+            all_series=raw,
+            init_frac=init_frac,
+            model=args.target_model,
+            c=target_c,
+            h=target_h,
+            temp=target_t,
+            target_init_frac=target_init_frac,
+            max_seeds=args.max_seeds,
+        )
+        if source_keys and target_keys:
+            print(
+                "No seed matches within the requested initial-up-fraction tolerance; "
+                "falling back to closest available seeds at the exact parameter points."
+            )
+        else:
+            print(
+                "No matching seed trajectories found at the requested parameter points. "
+                "Writing placeholder trajectory plot and continuing with artifact outputs."
+            )
 
     # Plot seed-level trajectories + mean lines.
     fig, axes = plt.subplots(1, 2, figsize=(12, 4), constrained_layout=True)
-    for key in source_keys:
-        ts = sorted(raw[key].keys())
-        ys = [raw[key][t] for t in ts]
-        axes[0].plot(ts, ys, alpha=0.25, color="tab:blue")
-    for key in target_keys:
-        ts = sorted(raw[key].keys())
-        ys = [raw[key][t] for t in ts]
-        axes[1].plot(ts, ys, alpha=0.25, color="tab:orange")
+    if source_keys and target_keys:
+        for key in source_keys:
+            ts = sorted(raw[key].keys())
+            ys = [raw[key][t] for t in ts]
+            axes[0].plot(ts, ys, alpha=0.25, color="tab:blue")
+        for key in target_keys:
+            ts = sorted(raw[key].keys())
+            ys = [raw[key][t] for t in ts]
+            axes[1].plot(ts, ys, alpha=0.25, color="tab:orange")
 
-    ts_s, mu_s = mean_series(source_keys, raw)
-    ts_t, mu_t = mean_series(target_keys, raw)
-    axes[0].plot(ts_s, mu_s, color="tab:blue", linewidth=2.5, label=f"mean {args.source_model}")
-    axes[1].plot(ts_t, mu_t, color="tab:orange", linewidth=2.5, label=f"mean {args.target_model}")
+        ts_s, mu_s = mean_series(source_keys, raw)
+        ts_t, mu_t = mean_series(target_keys, raw)
+        axes[0].plot(ts_s, mu_s, color="tab:blue", linewidth=2.5, label=f"mean {args.source_model}")
+        axes[1].plot(ts_t, mu_t, color="tab:orange", linewidth=2.5, label=f"mean {args.target_model}")
+
+        fig.suptitle(
+            f"Trajectories with similar initial up-fraction (~{target_init_frac:.2f}, tol={args.init_up_frac_tol:.2f})",
+            fontsize=11,
+        )
+    else:
+        axes[0].text(
+            0.5,
+            0.5,
+            "No source/target seed trajectories\navailable for overlay.",
+            ha="center",
+            va="center",
+            transform=axes[0].transAxes,
+        )
+        axes[1].text(
+            0.5,
+            0.5,
+            "Try regenerating raw CSV with more seeds\nor adjusting parameter ranges.",
+            ha="center",
+            va="center",
+            transform=axes[1].transAxes,
+        )
+        fig.suptitle("Trajectory overlay unavailable for requested parameter pairing", fontsize=11)
 
     axes[0].set_title(
         f"Source: {args.source_model}\nJ={args.coupling:.2f}, h={args.field:.2f}, T={args.temperature:.2f}"
@@ -236,11 +308,6 @@ def main() -> None:
         ax.set_xlabel("t")
         ax.set_ylabel("m")
         ax.set_ylim(-1.05, 1.05)
-
-    fig.suptitle(
-        f"Trajectories with similar initial up-fraction (~{target_init_frac:.2f}, tol={args.init_up_frac_tol:.2f})",
-        fontsize=11,
-    )
     output_traj.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_traj, dpi=170)
     plt.close(fig)

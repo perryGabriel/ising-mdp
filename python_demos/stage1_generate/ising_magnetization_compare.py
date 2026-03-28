@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate cross-model magnetization datasets and summary manifolds.
 
-This script samples trajectories for all four Ising demo models over a grid of
+This script samples trajectories for selected Ising demo models over a grid of
 (J, h, T) values and multiple random initializations. It writes:
 1) A raw timeseries dataset for m(t), and
 2) A grouped mean/variance summary manifold by (model, J, h, T, t).
@@ -27,6 +27,7 @@ try:
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
+        model_5_heatmap_trajectory,
     )
 except ModuleNotFoundError:
     from python_demos.foundation.ising_four_models import (  # type: ignore
@@ -37,11 +38,12 @@ except ModuleNotFoundError:
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
+        model_5_heatmap_trajectory,
     )
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build magnetization comparison datasets for all four models.")
+    parser = argparse.ArgumentParser(description="Build magnetization comparison datasets across selected models.")
     parser.add_argument("--rows", type=int, default=4)
     parser.add_argument("--cols", type=int, default=4)
     parser.add_argument("--steps", type=int, default=20)
@@ -60,6 +62,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temp-count", type=int, default=5)
 
     parser.add_argument("--mixing", type=float, default=0.2)
+    parser.add_argument(
+        "--models",
+        default="1,2,3,4,5",
+        help="Comma-separated model ids to include (subset of 1,2,3,4,5).",
+    )
 
     parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
     parser.add_argument("--output-raw", default=None)
@@ -86,6 +93,7 @@ def trajectory_magnetizations(
     steps: int,
     seed: int,
     mixing: float,
+    selected_models: Sequence[str],
 ) -> Tuple[Dict[str, List[float]], int, float]:
     n_atoms = rows * cols
     rng = random.Random(seed)
@@ -93,31 +101,42 @@ def trajectory_magnetizations(
     initial_probs = [1.0 if s == 1 else 0.0 for s in start]
     edges = grid_edges(rows, cols)
 
-    model1 = model_1_heatmap_trajectory(params=params, steps=steps, initial_spins=start, n_cols=cols)
-    model2 = model_2_heatmap_trajectory(
-        n_spins=n_atoms,
-        params=params,
-        steps=steps,
-        n_rows=rows,
-        n_cols=cols,
-        initial_k_dist={sum(1 for s in start if s == 1): 1.0},
-    )
-    model3 = model_3_heatmap_trajectory(
-        initial_probs=initial_probs,
-        params=params,
-        steps=steps,
-        mixing=mixing,
-        n_rows=rows,
-        n_cols=cols,
-    )
-    model4 = model_4_heatmap_trajectory(start=start, params=params, edges=edges, steps=steps, n_cols=cols)
-
-    trajectories = {
-        "model_1": [mean_grid_value(frame) for frame in model1],
-        "model_2": [mean_grid_value(frame) for frame in model2],
-        "model_3": [mean_grid_value(frame) for frame in model3],
-        "model_4": [mean_grid_value(frame) for frame in model4],
-    }
+    trajectories: Dict[str, List[float]] = {}
+    if "1" in selected_models:
+        model1 = model_1_heatmap_trajectory(params=params, steps=steps, initial_spins=start, n_cols=cols)
+        trajectories["model_1"] = [mean_grid_value(frame) for frame in model1]
+    if "2" in selected_models:
+        model2 = model_2_heatmap_trajectory(
+            n_spins=n_atoms,
+            params=params,
+            steps=steps,
+            n_rows=rows,
+            n_cols=cols,
+            initial_k_dist={sum(1 for s in start if s == 1): 1.0},
+        )
+        trajectories["model_2"] = [mean_grid_value(frame) for frame in model2]
+    if "3" in selected_models:
+        model3 = model_3_heatmap_trajectory(
+            initial_probs=initial_probs,
+            params=params,
+            steps=steps,
+            mixing=mixing,
+            n_rows=rows,
+            n_cols=cols,
+        )
+        trajectories["model_3"] = [mean_grid_value(frame) for frame in model3]
+    if "4" in selected_models:
+        model4 = model_4_heatmap_trajectory(start=start, params=params, edges=edges, steps=steps, n_cols=cols)
+        trajectories["model_4"] = [mean_grid_value(frame) for frame in model4]
+    if "5" in selected_models:
+        model5 = model_5_heatmap_trajectory(
+            initial_probs=initial_probs,
+            params=params,
+            steps=steps,
+            n_rows=rows,
+            n_cols=cols,
+        )
+        trajectories["model_5"] = [mean_grid_value(frame) for frame in model5]
     up_count = sum(1 for s in start if s == 1)
     up_fraction = up_count / n_atoms
     return trajectories, up_count, up_fraction
@@ -193,9 +212,13 @@ def main() -> None:
         else Path(args.artifact_prefix) / "data" / "summary" / "magnetization_summary.csv"
     )
 
+    selected_models = [m.strip() for m in args.models.split(",") if m.strip()]
+    if not selected_models or any(m not in {"1", "2", "3", "4", "5"} for m in selected_models):
+        raise SystemExit("--models must be a comma-separated subset of {1,2,3,4,5}")
+
     if args.rows <= 0 or args.cols <= 0:
         raise SystemExit("--rows and --cols must be positive")
-    if args.rows * args.cols > MAX_ATOMS:
+    if "4" in selected_models and args.rows * args.cols > MAX_ATOMS:
         raise SystemExit(f"rows*cols must be <= {MAX_ATOMS} for tractable full-state model trajectories")
 
     j_values = linspace(args.j_min, args.j_max, args.j_count)
@@ -217,6 +240,7 @@ def main() -> None:
                 steps=args.steps,
                 seed=seed,
                 mixing=args.mixing,
+                selected_models=selected_models,
             )
             for model_name, series in traj.items():
                 for t, m in enumerate(series):
