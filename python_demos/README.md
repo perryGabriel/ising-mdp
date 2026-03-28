@@ -6,6 +6,7 @@ This package demonstrates **four Ising-inspired models**:
 2. Mean-field chain over `K=#up` (model 2).
 3. Local-neighborhood probability dynamics on rows×cols lattices (model 3).
 4. Full exponential state-space Gibbs model (model 4, typically with `N<=16`).
+5. A probabilistic model built heuristically from the expected effect each parameter should have.
 
 ## Phase-based layout
 
@@ -63,7 +64,7 @@ Color scale values are in `[-1, 1]`.
 Build raw trajectory data and a grouped manifold summary over `(J, h, T, t)`:
 
 ```bash
-python .\python_demos\stage1_generate\ising_magnetization_compare.py --artifact-prefix artifacts --rows 2 --cols 2 --steps 20 --seeds 30 --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
+python .\python_demos\stage1_generate\ising_magnetization_compare.py --artifact-prefix artifacts --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
 ```
 
 The raw file stores `m(t)` per model/seed, and the summary file stores mean/variance of `m` at each `(model, J, h, T, t)` grid point.

@@ -44,22 +44,22 @@ except ModuleNotFoundError:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build magnetization comparison datasets across selected models.")
-    parser.add_argument("--rows", type=int, default=4)
-    parser.add_argument("--cols", type=int, default=4)
+    parser.add_argument("--rows", type=int, default=2)
+    parser.add_argument("--cols", type=int, default=3)
     parser.add_argument("--steps", type=int, default=20)
-    parser.add_argument("--seeds", type=int, default=30, help="Number of seeded initializations per parameter point")
+    parser.add_argument("--seeds", type=int, default=20, help="Number of seeded initializations per parameter point")
 
     parser.add_argument("--j-min", type=float, default=0.2)
     parser.add_argument("--j-max", type=float, default=1.2)
-    parser.add_argument("--j-count", type=int, default=5)
+    parser.add_argument("--j-count", type=int, default=3)
 
     parser.add_argument("--h-min", type=float, default=-0.4)
     parser.add_argument("--h-max", type=float, default=0.4)
-    parser.add_argument("--h-count", type=int, default=5)
+    parser.add_argument("--h-count", type=int, default=3)
 
     parser.add_argument("--temp-min", type=float, default=0.6)
     parser.add_argument("--temp-max", type=float, default=2.0)
-    parser.add_argument("--temp-count", type=int, default=5)
+    parser.add_argument("--temp-count", type=int, default=3)
 
     parser.add_argument("--mixing", type=float, default=0.2)
     parser.add_argument(
