@@ -1,2 +1,0 @@
-isingmdp
-python_demos
