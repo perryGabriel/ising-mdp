@@ -121,13 +121,15 @@ The pipeline also writes `reports/figure_manifest.json` for reproducibility trac
 From repo root:
 
 ```bash
-python -m unittest .\python_demos\tests\test_ising_four_models.py
+python -m unittest python_demos.tests.test_ising_four_models
+# or run the full suite:
+python -m unittest discover -s python_demos/tests -p "test_*.py"
 ```
 
 From inside `python_demos/`:
 
 ```bash
-python .\python_demos\tests\test_ising_four_models.py
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
 All models use the same seeded random lattice initialization (`--seed`).

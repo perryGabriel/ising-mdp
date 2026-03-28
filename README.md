@@ -34,7 +34,9 @@ python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 16
 Run tests:
 
 ```bash
-python -m unittest .\python_demos\tests\test_ising_four_models.py
+python -m unittest python_demos.tests.test_ising_four_models
+# or run the full suite:
+python -m unittest discover -s python_demos/tests -p "test_*.py"
 ```
 
 
