@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "isingMDP"
+version = "0.1.0"
+description = "Ising-inspired MDP simulation demos and heatmap visualizations"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Ising MDP contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.8", "pillow>=10.0"]
+
+[project.scripts]
+ising-four-models = "python_demos.foundation.ising_four_models:demo_entry"
+ising-heatmap-gif = "python_demos.stage1_generate.ising_heatmap_gif:main"
+ising-magnetization-compare = "python_demos.stage1_generate.ising_magnetization_compare:main"
+ising-fit-parameter-map = "python_demos.stage2_map.fit_parameter_map:main"
+ising-plot-manifold = "python_demos.stage3_analyze.plot_magnetization_manifold:main"
+ising-visualize-matching = "python_demos.stage3_analyze.visualize_trajectory_matching:main"
+ising-renorm-demo = "python_demos.stage3_analyze.renormalization_operator_demo:main"
+ising-run-report-pipeline = "python_demos.stage4_report.run_report_pipeline:main"
+ising-generate-manifest = "python_demos.stage4_report.generate_figure_manifest:main"
+
+[tool.setuptools.packages.find]
+include = ["python_demos*", "isingmdp*"]
