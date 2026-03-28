@@ -95,7 +95,7 @@ python .\python_demos\stage3_analyze\plot_magnetization_manifold.py --artifact-p
 Compare source vs mapped-target trajectories for seeds with similar initial up-spin fraction, and produce evaluation artifacts:
 
 ```bash
-python .\python_demos\stage3_analyze\visualize_trajectory_matching.py --artifact-prefix artifacts --source-model model_1 --target-model model_5 --coupling 0.7 --field 0.0 --temperature 1.0 --output-traj artifacts/plots/trajectory_matching.png --output-artifacts artifacts/plots/matching_artifacts.png
+python .\python_demos\stage3_analyze\visualize_trajectory_matching.py --artifact-prefix artifacts --source-model model_2 --target-model model_3 --coupling 0.0 --field 0.0 --temperature 0.0 --output-traj artifacts/plots/trajectory_matching_2_3.png --output-artifacts artifacts/plots/matching_artifacts_2_3.png
 ```
 
 This reports mapped parameters for each model and writes two figures: (1) seed-level trajectory overlay + means, (2) fit-error histogram + time-resolved manifold residual.
