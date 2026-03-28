@@ -22,6 +22,7 @@ except ModuleNotFoundError:
 try:
     from python_demos.foundation.ising_four_models import (
         IsingParams,
+        build_parser,
         grid_edges,
         model_1_heatmap_trajectory,
         model_1_single_spin,
@@ -32,10 +33,12 @@ try:
         model_4_full_state_space,
         model_4_heatmap_trajectory,
         probs_to_state_distribution,
+        MAX_ATOMS,
     )
 except ModuleNotFoundError:
     from python_demos.foundation.ising_four_models import (  # type: ignore
         IsingParams,
+        build_parser,
         grid_edges,
         model_1_heatmap_trajectory,
         model_1_single_spin,
@@ -46,6 +49,7 @@ except ModuleNotFoundError:
         model_4_full_state_space,
         model_4_heatmap_trajectory,
         probs_to_state_distribution,
+        MAX_ATOMS,
     )
 
 
@@ -133,6 +137,26 @@ class IsingDemoTests(unittest.TestCase):
         for frame in traj:
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
+
+    def test_exp_atoms_capped_by_global_max(self):
+        parser = build_parser()
+        args = parser.parse_args(["--exp-atoms", str(MAX_ATOMS + 5)])
+        self.assertEqual(min(args.exp_atoms, MAX_ATOMS), MAX_ATOMS)
+
+    def test_model_4_supports_4x4_lattice(self):
+        params = IsingParams(temperature=1.0, coupling=0.6, field=0.0)
+        rows, cols = 4, 4
+        start = tuple([1, -1] * 8)
+        traj = model_4_heatmap_trajectory(
+            start=start,
+            params=params,
+            edges=grid_edges(rows, cols),
+            steps=1,
+            n_cols=cols,
+        )
+        self.assertEqual(len(traj), 2)
+        self.assertEqual(len(traj[0]), rows)
+        self.assertEqual(len(traj[0][0]), cols)
 
     def test_heatmap_gif_parser_accepts_layout_seed_and_intro_controls(self):
         parser = build_gif_parser()

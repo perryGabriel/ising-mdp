@@ -35,7 +35,7 @@ pip install -e .[viz]
 ## Run terminal demo
 
 ```bash
-python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 4
+python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 16
 ```
 
 ## Heatmap GIF animation
@@ -51,7 +51,7 @@ The animation panels are:
 - **Model 1**: independent-spin lattice heatmap on `rows`x`cols`.
 - **Model 2**: mean-field lattice heatmap on `rows`x`cols`.
 - **Model 3**: local-neighborhood expected-spin heatmap on `rows`x`cols`.
-- **Model 4**: full-state expected-spin heatmap on `rows`x`cols` (currently `rows*cols<=9`).
+- **Model 4**: full-state expected-spin heatmap on `rows`x`cols` (currently `rows*cols<=16`, i.e. up to 4x4).
 
 Color scale values are in `[-1, 1]`.
 

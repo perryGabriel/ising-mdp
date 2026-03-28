@@ -22,6 +22,7 @@ try:
     from python_demos.foundation.ising_four_models import (
         IsingParams,
         grid_edges,
+        MAX_ATOMS,
         model_1_heatmap_trajectory,
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
@@ -31,6 +32,7 @@ except ModuleNotFoundError:
     from python_demos.foundation.ising_four_models import (  # type: ignore
         IsingParams,
         grid_edges,
+        MAX_ATOMS,
         model_1_heatmap_trajectory,
         model_2_heatmap_trajectory,
         model_3_heatmap_trajectory,
@@ -193,8 +195,8 @@ def main() -> None:
 
     if args.rows <= 0 or args.cols <= 0:
         raise SystemExit("--rows and --cols must be positive")
-    if args.rows * args.cols > 9:
-        raise SystemExit("rows*cols must be <= 9 for tractable full-state model trajectories")
+    if args.rows * args.cols > MAX_ATOMS:
+        raise SystemExit(f"rows*cols must be <= {MAX_ATOMS} for tractable full-state model trajectories")
 
     j_values = linspace(args.j_min, args.j_max, args.j_count)
     h_values = linspace(args.h_min, args.h_max, args.h_count)

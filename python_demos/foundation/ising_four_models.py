@@ -24,6 +24,9 @@ Spin = int
 State = Tuple[Spin, ...]
 Distribution = Dict[State, float]
 
+# Practical cap for full-state (model 4) demos.
+MAX_ATOMS = 16
+
 
 @dataclass(frozen=True)
 class IsingParams:
@@ -425,7 +428,7 @@ def demo(args: argparse.Namespace) -> None:
         print(render_lattice(sampled, n_cols=2))
 
     print_model_header("Model 4: Full exponential state-space Gibbs model")
-    n_atoms = min(args.exp_atoms, 4)
+    n_atoms = min(args.exp_atoms, MAX_ATOMS)
     start = tuple([1] * (n_atoms // 2) + [-1] * (n_atoms - n_atoms // 2))
     edges = [(i, (i + 1) % n_atoms) for i in range(n_atoms)] if n_atoms > 1 else []
     traj = model_4_full_state_space(start=start, params=params, edges=edges, steps=args.steps)
@@ -451,7 +454,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--exp-atoms",
         type=int,
         default=4,
-        help="Number of atoms for the exponential model (capped at 4 for tractability).",
+        help=f"Number of atoms for the exponential model (capped at {MAX_ATOMS} for tractability).",
     )
     return parser
 

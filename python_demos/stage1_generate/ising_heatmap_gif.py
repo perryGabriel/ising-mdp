@@ -15,6 +15,7 @@ try:
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
         grid_edges,
+        MAX_ATOMS,
     )
 except ModuleNotFoundError:
     from python_demos.foundation.ising_four_models import (  # type: ignore
@@ -24,6 +25,7 @@ except ModuleNotFoundError:
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
         grid_edges,
+        MAX_ATOMS,
     )
 
 
@@ -65,8 +67,8 @@ def main() -> None:
         raise SystemExit("--rows and --cols must both be positive integers.")
 
     n_atoms = args.rows * args.cols
-    if n_atoms > 9:
-        raise SystemExit("rows*cols must be <= 9 for the full-state model to remain tractable.")
+    if n_atoms > MAX_ATOMS:
+        raise SystemExit(f"rows*cols must be <= {MAX_ATOMS} for the full-state model to remain tractable.")
 
     rng = random.Random(args.seed)
     start = tuple(rng.choice([-1, 1]) for _ in range(n_atoms))

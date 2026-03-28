@@ -28,7 +28,7 @@ pip install -e .[viz]
 Run terminal simulations:
 
 ```bash
-python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 4
+python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 16
 ```
 
 Run tests:
