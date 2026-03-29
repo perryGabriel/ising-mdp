@@ -27,7 +27,12 @@ Distribution = Dict[State, float]
 
 # Practical cap for full-state (model 4) demos.
 MAX_ATOMS = 16
-
+MODEL_2_TEMPERATURE_SCALE = 1.5 # Scale temperature for model 2 to roughly match model-1 convergence time.
+MODEL_3_TEMPERATURE_SCALE = 1.5 # Scale temperature for model 3 to roughly match model-1 convergence time.
+MODEL_3_TIME_ADJUSTMENT = 6 # Adjust model-3 steps to roughly match model-1 convergence time.
+MODEL_4_TIME_ADJUSTMENT = 8 # Adjust model-4 steps to roughly match model-1 convergence time. 
+MODEL_5_FIELD_SCALE = 2.5 # Scale field strength for model 5 to roughly match model-1 steady state.
+MODEL_5_TEMPERATURE_SCALE = 0.8 # Scale temperature for model 5 to roughly match model-1 convergence time.
 
 @dataclass(frozen=True)
 class IsingParams:
@@ -178,7 +183,7 @@ def model_2_mean_field(
     implemented numerically as tanh(beta * (J * m_t + h)) with beta = 1/T.
     """
 
-    beta = 1.0 / max(params.temperature, 1e-6)
+    beta = 1.0 / max(params.temperature * MODEL_2_TEMPERATURE_SCALE, 1e-6)
     current_m = sum(((2 * k - n_spins) / n_spins) * p for k, p in current_k_dist.items())
     next_m = math.tanh(beta * (params.coupling * current_m + params.field))
 
@@ -265,7 +270,7 @@ def model_3_local_probabilities(
     if len(current_probs) != n_rows * n_cols:
         raise ValueError("current_probs length must equal n_rows * n_cols")
 
-    beta = 1.0 / max(params.temperature, 1e-6)
+    beta = 1.0 / max(params.temperature * MODEL_3_TEMPERATURE_SCALE, 1e-6)
     next_probs: List[float] = []
     for i, p_up in enumerate(current_probs):
         neigh = grid_neighbors(i, n_rows=n_rows, n_cols=n_cols)
@@ -305,13 +310,14 @@ def model_3_heatmap_trajectory(
     probs = list(initial_probs)
     frames: List[List[List[float]]] = [spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols)]
     for _ in range(steps):
-        probs = model_3_local_probabilities(
-            probs,
-            params=params,
-            mixing=mixing,
-            n_rows=n_rows,
-            n_cols=n_cols,
-        )
+        for __ in range(MODEL_3_TIME_ADJUSTMENT):
+            probs = model_3_local_probabilities(
+                probs,
+                params=params,
+                mixing=mixing,
+                n_rows=n_rows,
+                n_cols=n_cols,
+            )
         frames.append(spins_to_grid([2.0 * p - 1.0 for p in probs], n_cols=n_cols))
     return frames
 
@@ -375,12 +381,13 @@ def model_4_full_state_space(
     traj = [current]
 
     for _ in range(steps):
-        next_dist: Distribution = {s: 0.0 for s in all_states}
-        for state, p_state in current.items():
-            trans = gibbs_next_distribution(state, params, edges)
-            for next_state, p_next in trans.items():
-                next_dist[next_state] += p_state * p_next
-        current = normalize(next_dist)
+        for __ in range(MODEL_4_TIME_ADJUSTMENT):
+            next_dist: Distribution = {s: 0.0 for s in all_states}
+            for state, p_state in current.items():
+                trans = gibbs_next_distribution(state, params, edges)
+                for next_state, p_next in trans.items():
+                    next_dist[next_state] += p_state * p_next
+            current = normalize(next_dist)
         traj.append(current)
 
     return traj
@@ -425,8 +432,8 @@ def model_5_restricted_interval_probabilities(
 
     p = clamp_params_restricted_interval(params)
     j = p.coupling
-    h = p.field
-    t = p.temperature
+    h = p.field * MODEL_5_FIELD_SCALE
+    t = p.temperature * MODEL_5_TEMPERATURE_SCALE
     abs_h = abs(h)
 
     next_probs: List[float] = []

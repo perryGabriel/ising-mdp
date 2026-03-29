@@ -49,8 +49,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--steps", type=int, default=20)
     parser.add_argument("--seeds", type=int, default=20, help="Number of seeded initializations per parameter point")
 
-    parser.add_argument("--j-min", type=float, default=0.2)
-    parser.add_argument("--j-max", type=float, default=1.2)
+    parser.add_argument("--j-min", type=float, default=0.1)
+    parser.add_argument("--j-max", type=float, default=1.0)
     parser.add_argument("--j-count", type=int, default=3)
 
     parser.add_argument("--h-min", type=float, default=-0.4)
