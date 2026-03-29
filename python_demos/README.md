@@ -40,10 +40,10 @@ python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 16
 
 ## Heatmap GIF animation
 
-Create an animated GIF with **all four models sharing one lattice size + initial condition**:
+Create an animated GIF with selected models (defaults to **all five**) sharing one lattice size + initial condition:
 
 ```bash
-python .\python_demos\stage1_generate\ising_heatmap_gif.py --artifact-prefix artifacts --steps 20 --fps 4 --rows 3 --cols 3 --seed 7 --hold-frames 4 --intro-label-frames 6 --output artifacts/plots/ising_heatmaps.gif
+python .\python_demos\stage1_generate\ising_heatmap_gif.py --artifact-prefix artifacts --steps 20 --fps 4 --rows 3 --cols 3 --seed 7 --hold-frames 4 --intro-label-frames 6 --models 1,2,3,4,5 --output artifacts/plots/ising_heatmaps.gif
 ```
 
 The animation panels are:
@@ -52,6 +52,9 @@ The animation panels are:
 - **Model 2**: mean-field lattice heatmap on `rows`x`cols`.
 - **Model 3**: local-neighborhood expected-spin heatmap on `rows`x`cols`.
 - **Model 4**: full-state expected-spin heatmap on `rows`x`cols` (currently `rows*cols<=16`, i.e. up to 4x4).
+- **Model 5**: restricted-interval affine operator model on per-site probabilities.
+
+Use `--models` to include a subset (for example, omit model 4 on larger lattices).
 
 Color scale values are in `[-1, 1]`.
 
@@ -73,12 +76,24 @@ Fit `phi_{i->j}` by nearest-neighbor manifold matching with an affine approximat
 python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --output-map artifacts/maps/parameter_map.csv --output-affine artifacts/maps/parameter_map_affine.json
 ```
 
+Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
+
+```bash
+python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
+```
+
 ## Manifold plotting
 
 Render trajectory bands and residual maps from generated CSVs:
 
 ```bash
 python .\python_demos\stage3_analyze\plot_magnetization_manifold.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --output-traj artifacts/plots/magnetization_trajectory_bands.png --output-residual artifacts/plots/magnetization_residual_map.png
+```
+
+Plot the full summary manifold as a grid (rows = parameter settings, columns = models) with mean and 95% CI fill bands:
+
+```bash
+python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
 ```
 
 ## Trajectory matching visualization
