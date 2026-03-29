@@ -162,13 +162,22 @@ def main() -> None:
                 ax.text(0.5, 0.5, "no data", ha="center", va="center", transform=ax.transAxes, fontsize=8)
 
             if r_idx == 0:
-                ax.set_title(model)
+                ax.set_title(model, fontsize=14)
+
             if c_idx == 0:
-                ax.set_ylabel(f"m\nJ={c:.2f}\nh={h:.2f}\nT={temp:.2f}", fontsize=8)
+                ax.set_ylabel(
+                    f"m\nJ={c:.2f}\nh={h:.2f}\nT={temp:.2f}",
+                    fontsize=12,
+                    rotation=0,
+                    labelpad=35,
+                    va="center"
+                )
+
             ax.set_ylim(-1.05, 1.05)
             ax.grid(alpha=0.15, linewidth=0.5)
+
             if r_idx == n_rows - 1:
-                ax.set_xlabel("t")
+                ax.set_xlabel("t", fontsize=12)
 
     fig.suptitle("Summary magnetization manifold (mean with 95% CI)", fontsize=11)
     output_path.parent.mkdir(parents=True, exist_ok=True)
