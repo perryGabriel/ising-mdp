@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import csv
 import math
-import time
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
 
@@ -20,11 +19,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--summary-csv", default=None, help="Path to magnetization_summary.csv")
     parser.add_argument("--output", default=None, help="Output image path")
     parser.add_argument(
-        "--output-metrics-csv",
-        default=None,
-        help="Output CSV path for model-vs-model_1 summary metrics.",
-    )
-    parser.add_argument(
         "--models",
         default=None,
         help="Optional comma-separated model order (defaults to models present in CSV).",
@@ -34,24 +28,6 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=None,
         help="Optional cap on number of parameter rows to render (for very large grids).",
-    )
-    parser.add_argument(
-        "--transient-frac",
-        type=float,
-        default=0.5,
-        help="Fraction of earliest timesteps used for transient RMSE (default: 0.5).",
-    )
-    parser.add_argument(
-        "--steady-window",
-        type=int,
-        default=5,
-        help="Number of final timesteps used to estimate steady-state mean (default: 5).",
-    )
-    parser.add_argument(
-        "--convergence-tol",
-        type=float,
-        default=0.02,
-        help="Absolute tolerance to define convergence to steady state (default: 0.02).",
     )
     return parser.parse_args()
 
@@ -114,107 +90,6 @@ def mean_and_ci95(row: SummaryRow) -> Tuple[float, float, float]:
     return mu, mu - half, mu + half
 
 
-def _series_to_arrays(series: Sequence[SummaryRow]) -> Tuple[List[int], List[float], List[float]]:
-    ts = [int(r["t"]) for r in series]
-    mean = [float(r["mean_m"]) for r in series]
-    var = [float(r["var_m"]) for r in series]
-    return ts, mean, var
-
-
-def _rmse(a: Sequence[float], b: Sequence[float]) -> float:
-    if not a or not b:
-        return float("nan")
-    n = min(len(a), len(b))
-    if n <= 0:
-        return float("nan")
-    return math.sqrt(sum((a[i] - b[i]) ** 2 for i in range(n)) / n)
-
-
-def convergence_time(means: Sequence[float], steady_mean: float, tol: float) -> int:
-    if not means:
-        return 0
-    for i in range(len(means)):
-        if all(abs(v - steady_mean) <= tol for v in means[i:]):
-            return i
-    return len(means) - 1
-
-
-def compute_metrics_against_model_1(
-    rows: Sequence[SummaryRow],
-    points: Sequence[ParamPoint],
-    models: Sequence[str],
-    transient_frac: float,
-    steady_window: int,
-    convergence_tol: float,
-) -> List[Dict[str, float | str]]:
-    if "model_1" not in models:
-        return []
-
-    metrics_rows: List[Dict[str, float | str]] = []
-    frac = min(1.0, max(0.0, transient_frac))
-    for point in points:
-        _, ref_mean, ref_var = _series_to_arrays(series_for(rows, "model_1", point))
-        if not ref_mean:
-            continue
-        steady_n_ref = max(1, min(steady_window, len(ref_mean)))
-        ref_steady = sum(ref_mean[-steady_n_ref:]) / steady_n_ref
-        ref_conv_t = convergence_time(ref_mean, ref_steady, convergence_tol)
-
-        for model in models:
-            t0 = time.perf_counter()
-            _, model_mean, model_var = _series_to_arrays(series_for(rows, model, point))
-            if not model_mean:
-                continue
-            n = min(len(ref_mean), len(model_mean))
-            transient_n = max(1, int(math.ceil(n * frac)))
-            transient_rmse = _rmse(model_mean[:transient_n], ref_mean[:transient_n])
-
-            steady_n = max(1, min(steady_window, len(model_mean)))
-            model_steady = sum(model_mean[-steady_n:]) / steady_n
-            steady_bias = model_steady - ref_steady
-            model_conv_t = convergence_time(model_mean, model_steady, convergence_tol)
-            variance_mismatch = _rmse(model_var[:n], ref_var[:n])
-            runtime_seconds = time.perf_counter() - t0
-
-            c, h, temp = point
-            metrics_rows.append(
-                {
-                    "model": model,
-                    "coupling": c,
-                    "field": h,
-                    "temperature": temp,
-                    "runtime_seconds": runtime_seconds,
-                    "transient_rmse_vs_model_1": transient_rmse,
-                    "steady_state_bias_vs_model_1": steady_bias,
-                    "convergence_time": model_conv_t,
-                    "convergence_time_diff_vs_model_1": model_conv_t - ref_conv_t,
-                    "variance_mismatch_vs_model_1": variance_mismatch,
-                }
-            )
-    return metrics_rows
-
-
-def write_metrics_csv(path: Path, rows: Sequence[Dict[str, float | str]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "model",
-        "coupling",
-        "field",
-        "temperature",
-        "runtime_seconds",
-        "transient_rmse_vs_model_1",
-        "steady_state_bias_vs_model_1",
-        "convergence_time",
-        "convergence_time_diff_vs_model_1",
-        "variance_mismatch_vs_model_1",
-    ]
-    with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
-
-
 def main() -> None:
     args = parse_args()
     summary_csv = (
@@ -226,11 +101,6 @@ def main() -> None:
         Path(args.output)
         if args.output
         else Path(args.artifact_prefix) / "plots" / "magnetization_summary_grid.png"
-    )
-    output_metrics_csv = (
-        Path(args.output_metrics_csv)
-        if args.output_metrics_csv
-        else Path(args.artifact_prefix) / "metrics" / "magnetization_summary_metrics.csv"
     )
 
     rows = load_summary_rows(summary_csv)
@@ -246,18 +116,6 @@ def main() -> None:
         points = points[: max(0, args.max_rows)]
     if not points:
         raise SystemExit("No parameter points to plot after applying --max-rows.")
-
-    metrics_rows = compute_metrics_against_model_1(
-        rows=rows,
-        points=points,
-        models=models,
-        transient_frac=args.transient_frac,
-        steady_window=max(1, args.steady_window),
-        convergence_tol=max(0.0, args.convergence_tol),
-    )
-    if metrics_rows:
-        write_metrics_csv(output_metrics_csv, metrics_rows)
-        print(f"Wrote summary metrics to {output_metrics_csv}")
 
     try:
         import matplotlib.pyplot as plt
@@ -304,13 +162,22 @@ def main() -> None:
                 ax.text(0.5, 0.5, "no data", ha="center", va="center", transform=ax.transAxes, fontsize=8)
 
             if r_idx == 0:
-                ax.set_title(model)
+                ax.set_title(model, fontsize=14)
+
             if c_idx == 0:
-                ax.set_ylabel(f"m\nJ={c:.2f}\nh={h:.2f}\nT={temp:.2f}", fontsize=8)
+                ax.set_ylabel(
+                    f"m\nJ={c:.2f}\nh={h:.2f}\nT={temp:.2f}",
+                    fontsize=12,
+                    rotation=0,
+                    labelpad=35,
+                    va="center"
+                )
+
             ax.set_ylim(-1.05, 1.05)
             ax.grid(alpha=0.15, linewidth=0.5)
+
             if r_idx == n_rows - 1:
-                ax.set_xlabel("t")
+                ax.set_xlabel("t", fontsize=12)
 
     fig.suptitle("Summary magnetization manifold (mean with 95% CI)", fontsize=11)
     output_path.parent.mkdir(parents=True, exist_ok=True)

@@ -98,16 +98,16 @@ Model-translation deliverables now include:
 
 Generated outputs are organized under `artifacts/` with per-phase subfolders and README guides.
 
-## Citation
+## Citing This Repository
 
-If you use this repository in a report or publication, you can cite it with:
+The following is a BibTeX citation for this repository:
 
-```bibtex
-@misc{ising_mdp_demos_2026,
-  title        = {Ising MDP Demos},
-  author       = {Ising MDP Contributors},
+```
+@misc{perryGabriel_isingMDP,
+  author       = {Gabriel Perry},
+  title        = {ising-mdp},
   year         = {2026},
-  howpublished = {\url{https://github.com/<your-org>/ising-mdp}},
-  note         = {GitHub repository}
+  howpublished = {\url{https://github.com/perryGabriel/ising-mdp}},
+  note         = {Accessed: 20XX-XX-XX}
 }
 ```
