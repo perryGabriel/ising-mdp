@@ -32,6 +32,8 @@ try:
         model_3_local_probabilities,
         model_4_full_state_space,
         model_4_heatmap_trajectory,
+        model_5_heatmap_trajectory,
+        model_5_restricted_interval_probabilities,
         probs_to_state_distribution,
         MAX_ATOMS,
     )
@@ -48,6 +50,8 @@ except ModuleNotFoundError:
         model_3_local_probabilities,
         model_4_full_state_space,
         model_4_heatmap_trajectory,
+        model_5_heatmap_trajectory,
+        model_5_restricted_interval_probabilities,
         probs_to_state_distribution,
         MAX_ATOMS,
     )
@@ -138,6 +142,21 @@ class IsingDemoTests(unittest.TestCase):
             self.assertEqual(len(frame), 2)
             self.assertEqual(len(frame[0]), 2)
 
+    def test_model_5_probabilities_bounded(self):
+        params = IsingParams(temperature=0.7, coupling=0.4, field=-0.3)
+        probs = model_5_restricted_interval_probabilities([0.8, 0.2, 0.5, 0.1], params=params, n_rows=2, n_cols=2)
+        for p in probs:
+            self.assertGreaterEqual(p, 0.0)
+            self.assertLessEqual(p, 1.0)
+
+    def test_model_5_heatmap_trajectory_shape(self):
+        params = IsingParams(temperature=0.7, coupling=0.4, field=-0.3)
+        traj = model_5_heatmap_trajectory([0.8, 0.2, 0.5, 0.1], params=params, steps=2, n_rows=2, n_cols=2)
+        self.assertEqual(len(traj), 3)
+        for frame in traj:
+            self.assertEqual(len(frame), 2)
+            self.assertEqual(len(frame[0]), 2)
+
     def test_exp_atoms_capped_by_global_max(self):
         parser = build_parser()
         args = parser.parse_args(["--exp-atoms", str(MAX_ATOMS + 5)])
@@ -161,13 +180,14 @@ class IsingDemoTests(unittest.TestCase):
     def test_heatmap_gif_parser_accepts_layout_seed_and_intro_controls(self):
         parser = build_gif_parser()
         args = parser.parse_args([
-            "--rows", "2", "--cols", "2", "--seed", "7", "--hold-frames", "4", "--intro-label-frames", "6"
+            "--rows", "2", "--cols", "2", "--seed", "7", "--hold-frames", "4", "--intro-label-frames", "6", "--models", "1,3,5"
         ])
         self.assertEqual(args.rows, 2)
         self.assertEqual(args.cols, 2)
         self.assertEqual(args.seed, 7)
         self.assertEqual(args.hold_frames, 4)
         self.assertEqual(args.intro_label_frames, 6)
+        self.assertEqual(args.models, "1,3,5")
 
     def test_all_model_trajectories_can_share_common_lattice_shape(self):
         params = IsingParams()

@@ -46,18 +46,19 @@ Generate cross-model magnetization datasets (raw + summary manifold):
 python .\python_demos\stage1_generate\ising_magnetization_compare.py --artifact-prefix artifacts --rows 4 --cols 4 --steps 20 --seeds 30 --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
 ```
 
-Generate animated heatmaps (all four models on the same rows×cols lattice and shared seed):
+Generate animated heatmaps (selectable models on the same rows×cols lattice and shared seed):
 
 ```bash
-python .\python_demos\stage1_generate\ising_heatmap_gif.py --artifact-prefix artifacts --steps 20 --fps 4 --rows 4 --cols 4 --seed 7 --hold-frames 4 --intro-label-frames 6 --output artifacts/gifs/ising_heatmaps.gif
+python .\python_demos\stage1_generate\ising_heatmap_gif.py --artifact-prefix artifacts --steps 20 --fps 4 --rows 4 --cols 4 --seed 7 --hold-frames 4 --intro-label-frames 6 --models 1,2,3,4,5 --output artifacts/gifs/ising_heatmaps.gif
 ```
 
-The GIF includes all four models on the same lattice shape, all seeded from the same initial state:
+The GIF includes selected models (defaults to all five) on the same lattice shape, all seeded from the same initial state:
 
 1. Model 1 independent-spin lattice,
 2. Model 2 mean-field lattice,
 3. Model 3 local-neighborhood probabilities on the selected lattice,
 4. Model 4 full state-space expected spins on the same lattice.
+5. Model 5 restricted-interval affine operator on per-site probabilities.
 
 and overlays a parameter key (`T`, `J`, `h`, mixing, lattice, seed).
 # Ising MDP simulator
@@ -96,3 +97,17 @@ Model-translation deliverables now include:
 
 
 Generated outputs are organized under `artifacts/` with per-phase subfolders and README guides.
+
+## Citation
+
+If you use this repository in a report or publication, you can cite it with:
+
+```bibtex
+@misc{ising_mdp_demos_2026,
+  title        = {Ising MDP Demos},
+  author       = {Ising MDP Contributors},
+  year         = {2026},
+  howpublished = {\url{https://github.com/<your-org>/ising-mdp}},
+  note         = {GitHub repository}
+}
+```

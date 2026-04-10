@@ -23,9 +23,9 @@ class MagnetizationCompareTests(unittest.TestCase):
 
     def test_trajectory_shapes_and_init_metadata(self):
         traj, up_count, up_frac = trajectory_magnetizations(
-            params=IsingParams(), rows=2, cols=2, steps=3, seed=7, mixing=0.2
+            params=IsingParams(), rows=2, cols=2, steps=3, seed=7, mixing=0.2, selected_models=["1", "2", "3", "4", "5"]
         )
-        self.assertEqual(set(traj.keys()), {"model_1", "model_2", "model_3", "model_4"})
+        self.assertEqual(set(traj.keys()), {"model_1", "model_2", "model_3", "model_4", "model_5"})
         for series in traj.values():
             self.assertEqual(len(series), 4)
         self.assertGreaterEqual(up_count, 0)
