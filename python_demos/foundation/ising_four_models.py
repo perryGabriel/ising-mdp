@@ -31,8 +31,8 @@ MODEL_2_TEMPERATURE_SCALE = 1.5 # Scale temperature for model 2 to roughly match
 MODEL_3_TEMPERATURE_SCALE = 1.5 # Scale temperature for model 3 to roughly match model-1 convergence time.
 MODEL_3_TIME_ADJUSTMENT = 6 # Adjust model-3 steps to roughly match model-1 convergence time.
 MODEL_4_TIME_ADJUSTMENT = 8 # Adjust model-4 steps to roughly match model-1 convergence time. 
-MODEL_5_FIELD_SCALE = 2.5 # Scale field strength for model 5 to roughly match model-1 steady state.
-MODEL_5_TEMPERATURE_SCALE = 0.8 # Scale temperature for model 5 to roughly match model-1 convergence time.
+MODEL_5_FIELD_SCALE = 8 # Scale field strength for model 5 to roughly match model-1 steady state.
+MODEL_5_TEMPERATURE_SCALE = 1.0 # Scale temperature for model 5 to roughly match model-1 convergence time.
 
 @dataclass(frozen=True)
 class IsingParams:
@@ -430,10 +430,10 @@ def model_5_restricted_interval_probabilities(
     if len(current_probs) != n_rows * n_cols:
         raise ValueError("current_probs length must equal n_rows * n_cols")
 
-    p = clamp_params_restricted_interval(params)
-    j = p.coupling
-    h = p.field * MODEL_5_FIELD_SCALE
-    t = p.temperature * MODEL_5_TEMPERATURE_SCALE
+    # p = clamp_params_restricted_interval(params)
+    j = math.tanh(params.coupling) # [-1, 1] coupling interval implemented by tanh nonlinearity.
+    h = math.tanh(params.field * MODEL_5_FIELD_SCALE) # [-1, 1] external field interval implemented by tanh nonlinearity.
+    t = logistic(params.temperature * MODEL_5_TEMPERATURE_SCALE) # [0, 1] temperature interval implemented by logistic nonlinearity.
     abs_h = abs(h)
 
     next_probs: List[float] = []

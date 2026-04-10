@@ -1,0 +1,31 @@
+{
+  "source_model": "model_1",
+  "target_model": "model_5",
+  "features": [
+    "bias",
+    "source_coupling",
+    "source_field",
+    "source_temperature"
+  ],
+  "coefficients": {
+    "target_coupling": [
+      0.5500000000000015,
+      -8.015421888175967e-16,
+      0.18749999999999992,
+      -7.861719589767044e-16
+    ],
+    "target_field": [
+      0.0,
+      0.0,
+      1.0,
+      -0.0
+    ],
+    "target_temperature": [
+      0.82222222222222,
+      1.4432899320127035e-15,
+      5.739578908170174e-17,
+      0.6666666666666676
+    ]
+  },
+  "fit_space": "raw"
+}

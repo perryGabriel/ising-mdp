@@ -1,0 +1,159 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts\\data\\raw\\magnetization_timeseries.csv",
+      "bytes": "5643170",
+      "sha256": "4e4a013aa97c8540f777adbbb1061f9b7b06fca01afadb9e795ed14014e3dff1"
+    },
+    {
+      "path": "artifacts\\data\\summary\\magnetization_summary.csv",
+      "bytes": "191403",
+      "sha256": "205f165cb8c738ac24eacc7938321ae391f91d95f53d5208483a30f8b5b6f028"
+    },
+    {
+      "path": "artifacts\\maps\\parameter_map.csv",
+      "bytes": "1691",
+      "sha256": "fe2bd88a77f3e2c568a3f30a6349ec4f6ac8a45c978829efc426bee03635ddbe"
+    },
+    {
+      "path": "artifacts\\maps\\parameter_map_affine.json",
+      "bytes": "584",
+      "sha256": "de0786b384d50b4c849362869b7b4309f8ef45ccf9e50feef1f2ef300a637ad1"
+    },
+    {
+      "path": "artifacts\\maps\\parameter_maps\\parameter_map_1_5.csv",
+      "bytes": "1529",
+      "sha256": "4febd4611baeec305b43f8c51dcbbce299f89b8eb9cda8a0fbf099d96c8e33f1"
+    },
+    {
+      "path": "artifacts\\maps\\parameter_maps_affine\\parameter_map_affine_1_5.json",
+      "bytes": "597",
+      "sha256": "396a6a4d68222502f6c9674b3ba27e44065b1ed5f018e56590becad4851ab512"
+    },
+    {
+      "path": "artifacts\\operator\\renormalization_operator.csv",
+      "bytes": "1386",
+      "sha256": "7e194609f9511e720d136fc5a74633b1077755d0fd61a857b05b44ad47422a8c"
+    },
+    {
+      "path": "artifacts\\operator\\renormalization_operator.png",
+      "bytes": "68506",
+      "sha256": "9e4cab3ed7818de504e922456c72cd91a757c964b5764e2db28c9dad01d0577b"
+    },
+    {
+      "path": "artifacts\\plots\\ising_heatmaps.gif",
+      "bytes": "196380",
+      "sha256": "3e9fcb10bedacc3be99e2eb9ba4a6a3fd58f3160473b0339c0b2424ee03de2c2"
+    },
+    {
+      "path": "artifacts\\plots\\magnetization_residual_map.png",
+      "bytes": "37356",
+      "sha256": "eed91073e17904b5b994052381fa4843930d6d0ece1f28da9baf22007c722e4a"
+    },
+    {
+      "path": "artifacts\\plots\\magnetization_summary_grid.png",
+      "bytes": "948235",
+      "sha256": "ac1a3543e06fb64adba8c9894688f4ca1d12c33441febe7671643ed97a395f71"
+    },
+    {
+      "path": "artifacts\\plots\\magnetization_trajectory_bands.png",
+      "bytes": "77747",
+      "sha256": "f8280bc5b79ea7b0abe72e2ae581b9e81de375be15d1d4364f70419aa00fc686"
+    },
+    {
+      "path": "artifacts\\plots\\matching_artifacts\\matching_artifacts_1_2.png",
+      "bytes": "46868",
+      "sha256": "5ea8d823ad6a3ab9e54d12c4423e7c89edde262eae8adf87007b10024f79392d"
+    },
+    {
+      "path": "artifacts\\plots\\matching_artifacts\\matching_artifacts_1_3.png",
+      "bytes": "46868",
+      "sha256": "5ea8d823ad6a3ab9e54d12c4423e7c89edde262eae8adf87007b10024f79392d"
+    },
+    {
+      "path": "artifacts\\plots\\matching_artifacts\\matching_artifacts_2_3.png",
+      "bytes": "46868",
+      "sha256": "5ea8d823ad6a3ab9e54d12c4423e7c89edde262eae8adf87007b10024f79392d"
+    },
+    {
+      "path": "artifacts\\plots\\matching_artifacts.png",
+      "bytes": "45355",
+      "sha256": "7bd2c8e0c494c46ce36b17baaa39aa83797ceb8f15c3ea055794608243c602ba"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map.png",
+      "bytes": "42509",
+      "sha256": "cf1589df375d6713083fe8e75603d8f220cbbb74ee7f2b21808adf6cdb96426d"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_1_2.png",
+      "bytes": "40168",
+      "sha256": "d2df9f8496c9586b254c3ab6613c53d0ad67c8f55344c880ce45673985f59d3e"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_1_3.png",
+      "bytes": "40227",
+      "sha256": "91ea98b63d34810e162eb4c7e1d01547dc36cf7f00f2d4eae8e3285202ccb7f1"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_1_4.png",
+      "bytes": "40062",
+      "sha256": "d50c19acfa2a231fb66a4b5c528ae639f09159407aebd3f7a49f184800bf5b21"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_1_5.png",
+      "bytes": "40108",
+      "sha256": "e63b364870b3ef4f52d436860c98c475ba9bea2a3ddde7db37845703daeca5e1"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_2_3.png",
+      "bytes": "40444",
+      "sha256": "ca96c4879c2bf0a6e5e29e3b22f99ad61cef3eff5fb6a7f83521592d08ab4c08"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_2_4.png",
+      "bytes": "40299",
+      "sha256": "64399c200a13f6e9cd41f7309f2ccc0932dd5f6f7c8f06c51434d04c5f9bd21c"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_2_5.png",
+      "bytes": "40334",
+      "sha256": "894751eaa769bc88d5918ca6d36a3b4eb6591ca757028ed3d76720ebe166c4c2"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_3_4.png",
+      "bytes": "40358",
+      "sha256": "1093531c8fc31669e42b93d25544977365095028294c54eac748b3518c07bdaf"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_3_5.png",
+      "bytes": "40391",
+      "sha256": "3370d2449f4f9c1046fe1d10ceda4b4fd7a748ae5af41cbba1363f3356c2fc57"
+    },
+    {
+      "path": "artifacts\\plots\\residual_maps\\magnetization_residual_map_4_5.png",
+      "bytes": "40215",
+      "sha256": "24bc52df279aaeff08cf61daece34b1394311675c363a96cd199b657fb5c1ffe"
+    },
+    {
+      "path": "artifacts\\plots\\trajectory_matching\\trajectory_matching_1_2.png",
+      "bytes": "66820",
+      "sha256": "6f8e17c5ed8b2f850e817fd6c70ec14d6e0e65724e490dc84a5e50c552bb509d"
+    },
+    {
+      "path": "artifacts\\plots\\trajectory_matching\\trajectory_matching_1_3.png",
+      "bytes": "66857",
+      "sha256": "d9b2f7130dc4568542b326951fc655ecc1453b1d82190e1bf9ba79c1e9ebb106"
+    },
+    {
+      "path": "artifacts\\plots\\trajectory_matching\\trajectory_matching_2_3.png",
+      "bytes": "67160",
+      "sha256": "dc7b348740af280edc9e754b75f56329d54bcdfd210d96239805048d5dd71e42"
+    },
+    {
+      "path": "artifacts\\plots\\trajectory_matching.png",
+      "bytes": "65385",
+      "sha256": "2b15bfffb920d13c85e715230b63a8933d2f8808b2dd864fe9c96a2a072acfb3"
+    }
+  ]
+}

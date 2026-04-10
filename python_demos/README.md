@@ -36,7 +36,7 @@ pip install -e .[viz]
 ## Run terminal demo
 
 ```bash
-python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 16
+python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 9
 ```
 
 ## Heatmap GIF animation
@@ -44,7 +44,7 @@ python .\python_demos\foundation\ising_four_models.py --steps 4 --exp-atoms 16
 Create an animated GIF with selected models (defaults to **all five**) sharing one lattice size + initial condition:
 
 ```bash
-python .\python_demos\stage1_generate\ising_heatmap_gif.py --artifact-prefix artifacts --steps 20 --fps 4 --rows 4 --cols 4 --seed 7 --hold-frames 4 --intro-label-frames 6 --models 1,2,3,5 --output artifacts/plots/ising_heatmaps.gif
+python .\python_demos\stage1_generate\ising_heatmap_gif.py --artifact-prefix artifacts --steps 13 --fps 1 --rows 4 --cols 4 --seed 7 --hold-frames 2 --intro-label-frames 2 --models 1,2,3,5 --output artifacts/plots/ising_heatmaps.gif
 ```
 
 The animation panels are:
@@ -74,7 +74,7 @@ The raw file stores `m(t)` per model/seed, and the summary file stores mean/vari
 Fit `phi_{i->j}` by nearest-neighbor manifold matching with an affine approximation:
 
 ```bash
-python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_5 --output-map artifacts/maps/parameter_map_1_5.csv --output-affine artifacts/maps/parameter_map_affine_1_5.json
+python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_5 --output-map artifacts/maps/parameter_maps/parameter_map_1_5.csv --output-affine artifacts/maps/parameter_maps_affine/parameter_map_affine_1_5.json
 ```
 
 Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
@@ -118,7 +118,7 @@ This reports mapped parameters for each model and writes two figures: (1) seed-l
 Compare `evolve_full_then_project` vs `project_then_evolve_coarse` and report residuals:
 
 ```bash
-python .\python_demos\stage3_analyze\renormalization_operator_demo.py --artifact-prefix artifacts --rows 3 --cols 3 --steps 20 --seed 7 --output-csv artifacts/operator/renormalization_operator.csv --output-plot artifacts/operator/renormalization_operator.png
+python .\python_demos\stage3_analyze\renormalization_operator_demo.py --artifact-prefix artifacts --rows 2 --cols 3 --steps 20 --seed 7 --output-csv artifacts/operator/renormalization_operator.csv --output-plot artifacts/operator/renormalization_operator.png
 ```
 
 This writes a per-time residual CSV and (optionally) a two-panel plot of trajectories and absolute residuals.
@@ -132,7 +132,7 @@ Open `notebooks/renormalization_demo.ipynb` for a pedagogical side-by-side proje
 Run the full report-oriented workflow in one command:
 
 ```bash
-python .\python_demos\stage4_report\run_report_pipeline.py --artifact-prefix artifacts --rows 3 --cols 3 --steps 20 --seeds 30
+python .\python_demos\stage4_report\run_report_pipeline.py --artifact-prefix artifacts --rows 2 --cols 3 --steps 20 --seeds 30
 # add --skip-plots if matplotlib is unavailable
 ```
 

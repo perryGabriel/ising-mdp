@@ -133,7 +133,7 @@ def main() -> None:
     n_cols_plot = 2 if n_panels > 1 else 1
     n_rows_plot = (n_panels + n_cols_plot - 1) // n_cols_plot
     fig, axes = plt.subplots(n_rows_plot, n_cols_plot, figsize=(4.5 * n_cols_plot, 4.5 * n_rows_plot), constrained_layout=True)
-    fig.suptitle("Ising model heatmaps over time", fontsize=12)
+    fig.suptitle(f"Ising model heatmaps over time, (T={args.temperature:.3g}, J={args.coupling:.3g}, h={args.field:.3g})", fontsize=12)
     ax = axes.ravel() if hasattr(axes, "ravel") else [axes]
 
     images = []

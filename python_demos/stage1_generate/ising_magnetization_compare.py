@@ -44,24 +44,24 @@ except ModuleNotFoundError:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build magnetization comparison datasets across selected models.")
-    parser.add_argument("--rows", type=int, default=2)
-    parser.add_argument("--cols", type=int, default=3)
-    parser.add_argument("--steps", type=int, default=20)
+    parser.add_argument("--rows", type=int, default=2, help="Number of grid rows (atoms)")
+    parser.add_argument("--cols", type=int, default=3, help="Number of grid columns (atoms)")
+    parser.add_argument("--steps", type=int, default=20, help="Number of time steps")
     parser.add_argument("--seeds", type=int, default=20, help="Number of seeded initializations per parameter point")
 
-    parser.add_argument("--j-min", type=float, default=0.1)
-    parser.add_argument("--j-max", type=float, default=1.0)
-    parser.add_argument("--j-count", type=int, default=3)
+    parser.add_argument("--j-min", type=float, default=0.1, help="Min coupling strength J")
+    parser.add_argument("--j-max", type=float, default=1.0, help="Max coupling strength J")
+    parser.add_argument("--j-count", type=int, default=3, help="Number of J values to sample")
 
-    parser.add_argument("--h-min", type=float, default=-0.4)
-    parser.add_argument("--h-max", type=float, default=0.4)
-    parser.add_argument("--h-count", type=int, default=3)
+    parser.add_argument("--h-min", type=float, default=-0.4, help="Min external field h")
+    parser.add_argument("--h-max", type=float, default=0.4, help="Max external field h")
+    parser.add_argument("--h-count", type=int, default=3, help="Number of h values to sample")
 
-    parser.add_argument("--temp-min", type=float, default=0.6)
-    parser.add_argument("--temp-max", type=float, default=2.0)
-    parser.add_argument("--temp-count", type=int, default=3)
+    parser.add_argument("--temp-min", type=float, default=0.6, help="Min temperature")
+    parser.add_argument("--temp-max", type=float, default=2.0, help="Max temperature")
+    parser.add_argument("--temp-count", type=int, default=3, help="Number of temperature values to sample")
 
-    parser.add_argument("--mixing", type=float, default=0.2)
+    parser.add_argument("--mixing", type=float, default=0.2, help="Mixing parameter for model 3 (between 0 and 1)")
     parser.add_argument(
         "--models",
         default="1,2,3,4,5",
@@ -69,8 +69,8 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
-    parser.add_argument("--output-raw", default=None)
-    parser.add_argument("--output-summary", default=None)
+    parser.add_argument("--output-raw", default=None, help="Output file for raw timeseries data")
+    parser.add_argument("--output-summary", default=None, help="Output file for summary manifold data")
     return parser.parse_args()
 
 
