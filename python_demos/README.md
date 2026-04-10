@@ -95,6 +95,12 @@ Optional: fit the affine map in a tanh/arctanh-normalized space for bounded para
 python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
 ```
 
+Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
+
+```bash
+python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
+```
+
 ## Manifold plotting
 
 Render trajectory bands and residual maps from generated CSVs:
@@ -114,6 +120,19 @@ Plot the full summary manifold as a grid (rows = parameter settings, columns = m
 ```bash
 python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
 ```
+
+Plot the full summary manifold as a grid (rows = parameter settings, columns = models) with mean and 95% CI fill bands, and export model-vs-model_1 metrics:
+
+```bash
+python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
+```
+
+This also writes `artifacts/metrics/magnetization_summary_metrics.csv` containing:
+- `runtime_seconds` (analysis runtime per model/parameter row),
+- `transient_rmse_vs_model_1`,
+- `steady_state_bias_vs_model_1`,
+- `convergence_time` and `convergence_time_diff_vs_model_1`,
+- `variance_mismatch_vs_model_1`.
 
 ## Trajectory matching visualization
 
