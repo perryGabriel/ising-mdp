@@ -109,18 +109,6 @@ Render trajectory bands and residual maps from generated CSVs:
 python .\python_demos\stage3_analyze\plot_magnetization_manifold.py --artifact-prefix artifacts --source-model model_1 --target-model model_5 --output-traj artifacts/plots/magnetization_trajectory_bands.png --output-residual artifacts/plots/magnetization_residual_map_1_5.png
 ```
 
-Plot the full summary manifold as a grid (rows = parameter settings, columns = models) with mean and 95% CI fill bands:
-
-```bash
-python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
-```
-
-Plot the full summary manifold as a grid (rows = parameter settings, columns = models) with mean and 95% CI fill bands:
-
-```bash
-python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
-```
-
 Plot the full summary manifold as a grid (rows = parameter settings, columns = models) with mean and 95% CI fill bands, and export model-vs-model_1 metrics:
 
 ```bash
