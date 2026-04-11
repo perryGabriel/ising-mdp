@@ -12,5 +12,14 @@ import pandas as pd
 # steady_state_bias_vs_model_1,convergence_time,convergence_time_diff_vs_model_1,variance_mismatch_vs_model_1
 
 df = pd.read_csv('artifacts/metrics/magnetization_summary_metrics.csv')
-grouped = df.groupby(['model'])['runtime_ratio_vs_model_1'].mean().reset_index()
+rmse = df.groupby(['model'])['transient_rmse_vs_model_1'].mean().reset_index()
+bias = df.groupby(['model'])['steady_state_bias_vs_model_1'].mean().reset_index()
+var = df.groupby(['model'])['variance_mismatch_vs_model_1'].mean().reset_index()
+trans = df.groupby(['model'])['convergence_time_diff_vs_model_1'].mean().reset_index()
+time = df.groupby(['model'])['runtime_ratio_vs_model_1'].mean().reset_index()
+# stack these columns together
+grouped = pd.merge(rmse, bias, on='model')
+grouped = pd.merge(grouped, var, on='model')
+grouped = pd.merge(grouped, trans, on='model')
+grouped = pd.merge(grouped, time, on='model')
 print(grouped)
