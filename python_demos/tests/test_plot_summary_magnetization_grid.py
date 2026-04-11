@@ -5,11 +5,14 @@ import unittest
 from pathlib import Path
 
 from python_demos.stage3_analyze.plot_summary_magnetization_grid import (
+    compute_metrics_for_point,
+    convergence_time,
     list_models,
     list_param_points,
     load_summary_rows,
     mean_and_ci95,
     series_for,
+    write_metrics_csv,
 )
 
 
@@ -43,6 +46,30 @@ class PlotSummaryMagnetizationGridTests(unittest.TestCase):
         self.assertAlmostEqual(mu, 0.2)
         self.assertLess(lo, mu)
         self.assertGreater(hi, mu)
+
+    def test_metrics_helpers(self):
+        rows = [
+            {"model": "model_1", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 0, "mean_m": 0.0, "var_m": 0.02, "n": 20},
+            {"model": "model_1", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 1, "mean_m": 0.4, "var_m": 0.02, "n": 20},
+            {"model": "model_1", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 2, "mean_m": 0.6, "var_m": 0.02, "n": 20},
+            {"model": "model_1", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 3, "mean_m": 0.6, "var_m": 0.02, "n": 20},
+            {"model": "model_2", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 0, "mean_m": 0.1, "var_m": 0.03, "n": 20},
+            {"model": "model_2", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 1, "mean_m": 0.5, "var_m": 0.01, "n": 20},
+            {"model": "model_2", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 2, "mean_m": 0.5, "var_m": 0.03, "n": 20},
+            {"model": "model_2", "coupling": 0.2, "field": 0.0, "temperature": 1.0, "t": 3, "mean_m": 0.5, "var_m": 0.01, "n": 20},
+        ]
+        self.assertEqual(convergence_time([0.0, 0.5, 0.49, 0.5], tol=0.02), 1)
+        metrics = compute_metrics_for_point(rows, point=(0.2, 0.0, 1.0), model="model_2")
+        self.assertGreaterEqual(float(metrics["runtime_seconds"]), 0.0)
+        self.assertGreaterEqual(float(metrics["transient_rmse_vs_model_1"]), 0.0)
+        self.assertIn("variance_mismatch_vs_model_1", metrics)
+
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "metrics.csv"
+            write_metrics_csv(out, [metrics])
+            text = out.read_text(encoding="utf-8")
+            self.assertIn("transient_rmse_vs_model_1", text)
+            self.assertIn("model_2", text)
 
 
 if __name__ == "__main__":
