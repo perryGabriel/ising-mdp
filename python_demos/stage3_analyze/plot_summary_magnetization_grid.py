@@ -159,7 +159,7 @@ def convergence_time(series: Sequence[float], tol: float = 0.05) -> int:
 
 
 def compute_metrics_for_point(
-    rows: Sequence[SummaryRow], point: ParamPoint, model: str, ground_truth: str = "model_1"
+    rows: Sequence[SummaryRow], point: ParamPoint, model: str, ground_truth: str = "model_1", runtime_map: RuntimeMap = {}
 ) -> Dict[str, float | str]:
     started = time.perf_counter()
     series = series_for(rows, model=model, point=point)
