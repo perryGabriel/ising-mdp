@@ -5,9 +5,10 @@ Generated metric CSVs include:
 
 Columns:
 - `model`, `coupling`, `field`, `temperature`
-- `runtime_seconds`
-- `transient_rmse_vs_model_1`
-- `steady_state_bias_vs_model_1`
-- `convergence_time`
+- `runtime_seconds` (summed simulation runtime over seeds for that model and parameter point, read from raw trajectory CSV)
+- `runtime_ratio_vs_model_1` (`runtime_seconds` divided by model 1 runtime for the same parameter point)
+- `transient_rmse_vs_model_1` (RMSE over the transient half of the trajectory, using model 1 means as ground truth)
+- `steady_state_bias_vs_model_1` (difference in late-window means: model minus model 1)
+- `convergence_time` (first time index after which the trajectory stays within tolerance of its own steady-state mean)
 - `convergence_time_diff_vs_model_1`
-- `variance_mismatch_vs_model_1`
+- `variance_mismatch_vs_model_1` (mean absolute variance difference over time versus model 1)

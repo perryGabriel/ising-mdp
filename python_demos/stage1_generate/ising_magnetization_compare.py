@@ -13,6 +13,7 @@ import argparse
 import csv
 import itertools
 import random
+import time
 from collections import defaultdict
 from pathlib import Path
 from statistics import mean
@@ -94,7 +95,7 @@ def trajectory_magnetizations(
     seed: int,
     mixing: float,
     selected_models: Sequence[str],
-) -> Tuple[Dict[str, List[float]], int, float]:
+) -> Tuple[Dict[str, List[float]], Dict[str, float], int, float]:
     n_atoms = rows * cols
     rng = random.Random(seed)
     start = tuple(rng.choice([-1, 1]) for _ in range(n_atoms))
@@ -102,10 +103,14 @@ def trajectory_magnetizations(
     edges = grid_edges(rows, cols)
 
     trajectories: Dict[str, List[float]] = {}
+    runtimes: Dict[str, float] = {}
     if "1" in selected_models:
+        started = time.perf_counter()
         model1 = model_1_heatmap_trajectory(params=params, steps=steps, initial_spins=start, n_cols=cols)
         trajectories["model_1"] = [mean_grid_value(frame) for frame in model1]
+        runtimes["model_1"] = time.perf_counter() - started
     if "2" in selected_models:
+        started = time.perf_counter()
         model2 = model_2_heatmap_trajectory(
             n_spins=n_atoms,
             params=params,
@@ -115,7 +120,9 @@ def trajectory_magnetizations(
             initial_k_dist={sum(1 for s in start if s == 1): 1.0},
         )
         trajectories["model_2"] = [mean_grid_value(frame) for frame in model2]
+        runtimes["model_2"] = time.perf_counter() - started
     if "3" in selected_models:
+        started = time.perf_counter()
         model3 = model_3_heatmap_trajectory(
             initial_probs=initial_probs,
             params=params,
@@ -125,10 +132,14 @@ def trajectory_magnetizations(
             n_cols=cols,
         )
         trajectories["model_3"] = [mean_grid_value(frame) for frame in model3]
+        runtimes["model_3"] = time.perf_counter() - started
     if "4" in selected_models:
+        started = time.perf_counter()
         model4 = model_4_heatmap_trajectory(start=start, params=params, edges=edges, steps=steps, n_cols=cols)
         trajectories["model_4"] = [mean_grid_value(frame) for frame in model4]
+        runtimes["model_4"] = time.perf_counter() - started
     if "5" in selected_models:
+        started = time.perf_counter()
         model5 = model_5_heatmap_trajectory(
             initial_probs=initial_probs,
             params=params,
@@ -137,9 +148,10 @@ def trajectory_magnetizations(
             n_cols=cols,
         )
         trajectories["model_5"] = [mean_grid_value(frame) for frame in model5]
+        runtimes["model_5"] = time.perf_counter() - started
     up_count = sum(1 for s in start if s == 1)
     up_fraction = up_count / n_atoms
-    return trajectories, up_count, up_fraction
+    return trajectories, runtimes, up_count, up_fraction
 
 
 def write_raw(path: Path, rows: Iterable[Dict[str, float]]) -> None:
@@ -154,6 +166,7 @@ def write_raw(path: Path, rows: Iterable[Dict[str, float]]) -> None:
         "initial_up_fraction",
         "t",
         "m",
+        "runtime_seconds",
     ]
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -233,7 +246,7 @@ def main() -> None:
         params = IsingParams(temperature=temperature, coupling=coupling, field=field)
         for seed in range(args.seeds):
             job_idx += 1
-            traj, up_count, up_fraction = trajectory_magnetizations(
+            traj, runtimes, up_count, up_fraction = trajectory_magnetizations(
                 params=params,
                 rows=args.rows,
                 cols=args.cols,
@@ -255,6 +268,7 @@ def main() -> None:
                             "initial_up_fraction": up_fraction,
                             "t": t,
                             "m": m,
+                            "runtime_seconds": runtimes.get(model_name, float("nan")),
                         }
                     )
 

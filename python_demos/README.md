@@ -116,11 +116,18 @@ python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifa
 ```
 
 This also writes `artifacts/metrics/magnetization_summary_metrics.csv` containing:
-- `runtime_seconds` (analysis runtime per model/parameter row),
-- `transient_rmse_vs_model_1`,
-- `steady_state_bias_vs_model_1`,
+- `runtime_seconds` (summed simulation runtime over seeds for each model/parameter row),
+- `runtime_ratio_vs_model_1` (runtime divided by model_1 runtime at same parameters),
+- `transient_rmse_vs_model_1` (RMSE over the transient first half of time points),
+- `steady_state_bias_vs_model_1` (late-window mean difference),
 - `convergence_time` and `convergence_time_diff_vs_model_1`,
-- `variance_mismatch_vs_model_1`.
+- `variance_mismatch_vs_model_1` (mean absolute variance difference).
+
+Plot one-at-a-time sweeps as a `k x 3` grid (columns: sweep `T`, sweep `h`, sweep `J`; each subplot overlays model_1 and surrogate curves, with trajectory RMSE vs model_1 in legend labels):
+
+```bash
+python .\python_demos\stage3_analyze\plot_one_at_a_time_sweeps.py --artifact-prefix artifacts --num-base-points 3 --output artifacts/plots/magnetization_one_at_a_time_sweeps.png
+```
 
 ## Trajectory matching visualization
 
