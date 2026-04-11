@@ -12,12 +12,14 @@ from typing import Dict, List, Sequence, Tuple
 
 SummaryRow = Dict[str, float | str]
 ParamPoint = Tuple[float, float, float]  # (J, h, T)
+RuntimeMap = Dict[Tuple[str, float, float, float], float]
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Plot summary magnetization grid (models x parameter points).")
     parser.add_argument("--artifact-prefix", default="artifacts", help="Base folder for generated artifacts")
     parser.add_argument("--summary-csv", default=None, help="Path to magnetization_summary.csv")
+    parser.add_argument("--raw-csv", default=None, help="Path to magnetization_timeseries.csv (for runtime metrics)")
     parser.add_argument("--output", default=None, help="Output image path")
     parser.add_argument(
         "--metrics-output",
@@ -55,6 +57,32 @@ def load_summary_rows(summary_csv: Path) -> List[SummaryRow]:
                 }
             )
     return rows
+
+
+def load_runtime_map(raw_csv: Path) -> RuntimeMap:
+    if not raw_csv.exists():
+        return {}
+
+    per_seed_runtime: Dict[Tuple[str, float, float, float, int], float] = {}
+    with raw_csv.open("r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames is None or "runtime_seconds" not in reader.fieldnames:
+            return {}
+        for row in reader:
+            key = (
+                row["model"],
+                float(row["coupling"]),
+                float(row["field"]),
+                float(row["temperature"]),
+                int(row["seed"]),
+            )
+            if key not in per_seed_runtime:
+                per_seed_runtime[key] = float(row["runtime_seconds"])
+
+    grouped: RuntimeMap = {}
+    for (model, c, h, temp, _seed), runtime in per_seed_runtime.items():
+        grouped[(model, c, h, temp)] = grouped.get((model, c, h, temp), 0.0) + runtime
+    return grouped
 
 
 def list_models(rows: Sequence[SummaryRow], requested: str | None) -> List[str]:
@@ -200,6 +228,11 @@ def main() -> None:
         if args.summary_csv
         else Path(args.artifact_prefix) / "data" / "summary" / "magnetization_summary.csv"
     )
+    raw_csv = (
+        Path(args.raw_csv)
+        if args.raw_csv
+        else Path(args.artifact_prefix) / "data" / "raw" / "magnetization_timeseries.csv"
+    )
     output_path = (
         Path(args.output)
         if args.output
@@ -212,6 +245,7 @@ def main() -> None:
     )
 
     rows = load_summary_rows(summary_csv)
+    runtime_map = load_runtime_map(raw_csv)
     if not rows:
         raise SystemExit(f"No rows found in {summary_csv}")
 

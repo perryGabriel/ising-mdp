@@ -1,5 +1,6 @@
 """Unit tests for plot_summary_magnetization_grid helpers."""
 
+import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,6 +10,7 @@ from python_demos.stage3_analyze.plot_summary_magnetization_grid import (
     convergence_time,
     list_models,
     list_param_points,
+    load_runtime_map,
     load_summary_rows,
     mean_and_ci95,
     series_for,
