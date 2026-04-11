@@ -22,10 +22,11 @@ class MagnetizationCompareTests(unittest.TestCase):
         self.assertAlmostEqual(mean_grid_value([[1.0, -1.0], [0.0, 0.0]]), 0.0)
 
     def test_trajectory_shapes_and_init_metadata(self):
-        traj, up_count, up_frac = trajectory_magnetizations(
+        traj, runtimes, up_count, up_frac = trajectory_magnetizations(
             params=IsingParams(), rows=2, cols=2, steps=3, seed=7, mixing=0.2, selected_models=["1", "2", "3", "4", "5"]
         )
         self.assertEqual(set(traj.keys()), {"model_1", "model_2", "model_3", "model_4", "model_5"})
+        self.assertEqual(set(runtimes.keys()), {"model_1", "model_2", "model_3", "model_4", "model_5"})
         for series in traj.values():
             self.assertEqual(len(series), 4)
         self.assertGreaterEqual(up_count, 0)
@@ -44,6 +45,7 @@ class MagnetizationCompareTests(unittest.TestCase):
                 "initial_up_fraction": 0.5,
                 "t": 0,
                 "m": 0.0,
+                "runtime_seconds": 0.123,
             }
         ]
         with tempfile.TemporaryDirectory() as td:
@@ -53,6 +55,7 @@ class MagnetizationCompareTests(unittest.TestCase):
                 parsed = list(csv.DictReader(f))
             self.assertEqual(parsed[0]["initial_up_count"], "2")
             self.assertEqual(parsed[0]["initial_up_fraction"], "0.5")
+            self.assertEqual(parsed[0]["runtime_seconds"], "0.123")
 
 
 if __name__ == "__main__":
