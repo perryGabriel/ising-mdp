@@ -43,7 +43,13 @@ python -m unittest discover -s python_demos/tests -p "test_*.py"
 Generate cross-model magnetization datasets (raw + summary manifold):
 
 ```bash
-python .\python_demos\stage1_generate\ising_magnetization_compare.py --artifact-prefix artifacts --rows 4 --cols 4 --steps 20 --seeds 30 --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
+python .\python_demos\stage1_generate\ising_magnetization_compare.py --artifact-prefix artifacts --rows 3 --cols 3 --steps 10 --seeds 10 --output-raw artifacts/data/raw/magnetization_timeseries.csv --output-summary artifacts/data/summary/magnetization_summary.csv
+```
+
+Aggregate trajectory data into comparison metrics and trajectory plots:
+
+```bash
+python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
 ```
 
 Generate animated heatmaps (selectable models on the same rows×cols lattice and shared seed):

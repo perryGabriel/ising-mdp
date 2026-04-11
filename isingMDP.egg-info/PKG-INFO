@@ -108,3 +108,17 @@ Model-translation deliverables now include:
 
 
 Generated outputs are organized under `artifacts/` with per-phase subfolders and README guides.
+
+## Citing This Repository
+
+The following is a BibTeX citation for this repository:
+
+```
+@misc{perryGabriel_isingMDP,
+  author       = {Gabriel Perry},
+  title        = {ising-mdp},
+  year         = {2026},
+  howpublished = {\url{https://github.com/perryGabriel/ising-mdp}},
+  note         = {Accessed: 20XX-XX-XX}
+}
+```

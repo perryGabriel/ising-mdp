@@ -83,24 +83,6 @@ Optional: fit the affine map in a tanh/arctanh-normalized space for bounded para
 python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_5 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
 ```
 
-Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
-
-```bash
-python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
-```
-
-Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
-
-```bash
-python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
-```
-
-Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
-
-```bash
-python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
-```
-
 ## Manifold plotting
 
 Render trajectory bands and residual maps from generated CSVs:
