@@ -83,24 +83,6 @@ Optional: fit the affine map in a tanh/arctanh-normalized space for bounded para
 python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_5 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
 ```
 
-Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
-
-```bash
-python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
-```
-
-Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
-
-```bash
-python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
-```
-
-Optional: fit the affine map in a tanh/arctanh-normalized space for bounded parameters:
-
-```bash
-python .\python_demos\stage2_map\fit_parameter_map.py --artifact-prefix artifacts --source-model model_1 --target-model model_2 --fit-space tanh-normalized --coupling-min -1 --coupling-max 1 --field-min -1 --field-max 1 --temperature-min 0 --temperature-max 1
-```
-
 ## Manifold plotting
 
 Render trajectory bands and residual maps from generated CSVs:
@@ -116,8 +98,7 @@ python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifa
 ```
 
 This also writes `artifacts/metrics/magnetization_summary_metrics.csv` containing:
-- `runtime_seconds` (summed simulation runtime over seeds for each model/parameter row),
-- `runtime_ratio_vs_model_1` (runtime divided by model_1 runtime at same parameters),
+- `runtime_seconds` (per-metric-row computation runtime),
 - `transient_rmse_vs_model_1` (RMSE over the transient first half of time points),
 - `steady_state_bias_vs_model_1` (late-window mean difference),
 - `convergence_time` and `convergence_time_diff_vs_model_1`,

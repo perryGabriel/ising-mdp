@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import math
+import time
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
 
@@ -147,12 +148,9 @@ def convergence_time(series: Sequence[float], tol: float = 0.05) -> int:
 
 
 def compute_metrics_for_point(
-    rows: Sequence[SummaryRow],
-    point: ParamPoint,
-    model: str,
-    runtime_map: RuntimeMap,
-    ground_truth: str = "model_1",
+    rows: Sequence[SummaryRow], point: ParamPoint, model: str, ground_truth: str = "model_1"
 ) -> Dict[str, float | str]:
+    started = time.perf_counter()
     series = series_for(rows, model=model, point=point)
     gt_series = series_for(rows, model=ground_truth, point=point)
     c, h, temp = point
@@ -181,15 +179,12 @@ def compute_metrics_for_point(
     else:
         var_mismatch = float("nan")
 
-    runtime_seconds = runtime_map.get((model, c, h, temp), float("nan"))
-    gt_runtime = runtime_map.get((ground_truth, c, h, temp), float("nan"))
-    runtime_ratio = runtime_seconds / gt_runtime if gt_runtime and not math.isnan(gt_runtime) else float("nan")
+    runtime_seconds = time.perf_counter() - started
     if model == ground_truth and n:
         transient_rmse = 0.0
         steady_bias = 0.0
         conv_diff = 0.0
         var_mismatch = 0.0
-        runtime_ratio = 1.0 if not math.isnan(runtime_seconds) else float("nan")
 
     return {
         "model": model,
@@ -197,7 +192,6 @@ def compute_metrics_for_point(
         "field": h,
         "temperature": temp,
         "runtime_seconds": runtime_seconds,
-        "runtime_ratio_vs_model_1": runtime_ratio,
         "transient_rmse_vs_model_1": transient_rmse,
         "steady_state_bias_vs_model_1": steady_bias,
         "convergence_time": conv_t,
@@ -214,7 +208,6 @@ def write_metrics_csv(path: Path, rows: Sequence[Dict[str, float | str]]) -> Non
         "field",
         "temperature",
         "runtime_seconds",
-        "runtime_ratio_vs_model_1",
         "transient_rmse_vs_model_1",
         "steady_state_bias_vs_model_1",
         "convergence_time",
@@ -338,9 +331,7 @@ def main() -> None:
     metric_rows: List[Dict[str, float | str]] = []
     for point in points:
         for model in models:
-            metric_rows.append(
-                compute_metrics_for_point(rows, point=point, model=model, runtime_map=runtime_map, ground_truth="model_1")
-            )
+            metric_rows.append(compute_metrics_for_point(rows, point=point, model=model, ground_truth="model_1"))
     write_metrics_csv(metrics_output_path, metric_rows)
 
     if plotting_available:
