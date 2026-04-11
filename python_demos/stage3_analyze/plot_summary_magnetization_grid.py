@@ -62,6 +62,17 @@ def load_summary_rows(summary_csv: Path) -> List[SummaryRow]:
 def load_runtime_map(raw_csv: Path) -> RuntimeMap:
     if not raw_csv.exists():
         return {}
+    
+    # get number of unique seeds
+    num_seeds = 0
+    with raw_csv.open("r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames is None or "seed" not in reader.fieldnames:
+            return {}
+        seeds = set()
+        for row in reader:
+            seeds.add(row["seed"])
+        num_seeds = len(seeds)
 
     per_seed_runtime: Dict[Tuple[str, float, float, float, int], float] = {}
     with raw_csv.open("r", encoding="utf-8") as f:
@@ -81,7 +92,7 @@ def load_runtime_map(raw_csv: Path) -> RuntimeMap:
 
     grouped: RuntimeMap = {}
     for (model, c, h, temp, _seed), runtime in per_seed_runtime.items():
-        grouped[(model, c, h, temp)] = grouped.get((model, c, h, temp), 0.0) + runtime
+        grouped[(model, c, h, temp)] = grouped.get((model, c, h, temp), 0.0) + runtime/max(1, num_seeds)
     return grouped
 
 
