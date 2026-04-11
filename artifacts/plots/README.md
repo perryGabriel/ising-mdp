@@ -3,6 +3,7 @@
 Generated figures include:
 - residual heatmaps,
 - manifold trajectory bands,
+- one-at-a-time parameter sweep grids,
 - mapped trajectory overlays,
 - matching/evaluation artifact dashboards.
 
