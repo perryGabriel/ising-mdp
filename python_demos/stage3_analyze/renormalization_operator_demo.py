@@ -14,7 +14,7 @@ import argparse
 import csv
 import random
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 try:
     from python_demos.foundation.ising_four_models import (
@@ -57,16 +57,10 @@ def project_dist_to_mean_m(dist: Distribution) -> float:
     return sum((sum(state) / n) * p for state, p in dist.items())
 
 
-def coarse_evolution_from_m0(n_spins: int, params: IsingParams, m0: float, steps: int) -> List[float]:
-    expected_k0 = (m0 * n_spins + n_spins) / 2.0
-    k_low = max(0, min(n_spins, int(expected_k0)))
-    k_dist: Dict[int, float] = {k_low: 1.0}
-
+def coarse_evolution_from_m0(params: IsingParams, m0: float, steps: int) -> List[float]:
     series = [m0]
     for _ in range(steps):
-        k_dist = model_2_mean_field(n_spins=n_spins, params=params, current_k_dist=k_dist)
-        m = sum(((2 * k - n_spins) / n_spins) * p for k, p in k_dist.items())
-        series.append(m)
+        series.append(model_2_mean_field(params=params, current_magnetization=series[-1]))
     return series
 
 
@@ -102,7 +96,7 @@ def main() -> None:
 
     # Path B: project initial condition to coarse state, then evolve coarse model.
     m0 = sum(start) / len(start)
-    path_b = coarse_evolution_from_m0(n_spins=n_atoms, params=params, m0=m0, steps=args.steps)
+    path_b = coarse_evolution_from_m0(params=params, m0=m0, steps=args.steps)
 
     rows = []
     for t in range(args.steps + 1):

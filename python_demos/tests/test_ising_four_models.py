@@ -74,13 +74,13 @@ class IsingDemoTests(unittest.TestCase):
 
     def test_model_2_distribution_sums_to_one(self):
         params = IsingParams(temperature=1.0, coupling=0.5, field=0.0)
-        dist = model_2_mean_field(8, params, {4: 1.0})
-        self.assertAlmostEqual(sum(dist.values()), 1.0)
+        next_m = model_2_mean_field(params, 0.0)
+        self.assertGreaterEqual(next_m, -1.0)
+        self.assertLessEqual(next_m, 1.0)
 
     def test_model_2_mean_field_uses_tanh_magnetization_update(self):
         params = IsingParams(temperature=1.0, coupling=0.0, field=0.4)
-        dist = model_2_mean_field(10, params, {5: 1.0})
-        next_m = sum(((2 * k - 10) / 10) * p for k, p in dist.items())
+        next_m = model_2_mean_field(params, 0.0)
         self.assertAlmostEqual(next_m, math.tanh(0.4 / MODEL_2_TEMPERATURE_SCALE), places=6)
 
     def test_model_3_stays_bounded(self):
@@ -116,18 +116,18 @@ class IsingDemoTests(unittest.TestCase):
 
     def test_model_2_heatmap_trajectory_shape(self):
         params = IsingParams()
-        traj = model_2_heatmap_trajectory(n_spins=6, params=params, steps=2)
+        traj = model_2_heatmap_trajectory(params=params, steps=2, n_rows=2, n_cols=3, initial_magnetization=0.0)
         self.assertEqual(len(traj), 3)
         for frame in traj:
-            self.assertEqual(len(frame), 1)
-            self.assertEqual(len(frame[0]), 7)
+            self.assertEqual(len(frame), 2)
+            self.assertEqual(len(frame[0]), 3)
             for v in frame[0]:
                 self.assertGreaterEqual(v, -1.0)
                 self.assertLessEqual(v, 1.0)
 
     def test_model_2_magnetization_trajectory_shape(self):
         params = IsingParams()
-        traj = model_2_magnetization_trajectory(n_spins=6, params=params, steps=2)
+        traj = model_2_magnetization_trajectory(params=params, steps=2, initial_magnetization=0.0)
         self.assertEqual(len(traj), 3)
         for value in traj:
             self.assertGreaterEqual(value, -1.0)
@@ -208,12 +208,11 @@ class IsingDemoTests(unittest.TestCase):
 
         model1 = model_1_heatmap_trajectory(params=params, steps=2, initial_spins=start, n_cols=cols)
         model2 = model_2_heatmap_trajectory(
-            n_spins=len(start),
             params=params,
             steps=2,
             n_rows=rows,
             n_cols=cols,
-            initial_k_dist={2: 1.0},
+            initial_magnetization=0.0,
         )
         model3 = model_3_heatmap_trajectory(
             initial_probs=[1.0 if s == 1 else 0.0 for s in start],

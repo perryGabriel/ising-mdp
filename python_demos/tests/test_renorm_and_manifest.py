@@ -16,7 +16,7 @@ class RenormAndManifestTests(unittest.TestCase):
         self.assertAlmostEqual(project_dist_to_mean_m(dist), 0.0)
 
     def test_coarse_evolution_length(self):
-        series = coarse_evolution_from_m0(n_spins=4, params=IsingParams(), m0=0.0, steps=5)
+        series = coarse_evolution_from_m0(params=IsingParams(), m0=0.0, steps=5)
         self.assertEqual(len(series), 6)
         for m in series:
             self.assertGreaterEqual(m, -1.0)

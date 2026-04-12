@@ -110,13 +110,12 @@ def trajectory_magnetizations(
         trajectories["model_1"] = [mean_grid_value(frame) for frame in model1]
         runtimes["model_1"] = time.perf_counter() - started
     if "2" in selected_models:
-        initial_k_dist = {sum(1 for s in start if s == 1): 1.0}
+        initial_magnetization = sum(start) / n_atoms
         started = time.perf_counter()
         trajectories["model_2"] = model_2_magnetization_trajectory(
-            n_spins=n_atoms,
             params=params,
             steps=steps,
-            initial_k_dist=initial_k_dist,
+            initial_magnetization=initial_magnetization,
         )
         runtimes["model_2"] = time.perf_counter() - started
     if "3" in selected_models:

@@ -95,10 +95,9 @@ def main() -> None:
         model_titles["1"] = "Model 1: Independent-spin lattice"
     if "2" in selected_models:
         model2_magnetization = model_2_magnetization_trajectory(
-            n_spins=n_atoms,
             params=params,
             steps=args.steps,
-            initial_k_dist={sum(1 for s in start if s == 1): 1.0},
+            initial_magnetization=sum(start) / n_atoms,
         )
         model_frames["2"] = [
             spins_to_grid([magnetization] * n_atoms, n_cols=args.cols) for magnetization in model2_magnetization
