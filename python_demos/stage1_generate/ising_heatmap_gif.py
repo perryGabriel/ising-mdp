@@ -11,23 +11,25 @@ try:
     from python_demos.foundation.ising_four_models import (
         IsingParams,
         model_1_heatmap_trajectory,
-        model_2_heatmap_trajectory,
+        model_2_magnetization_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
         model_5_heatmap_trajectory,
         grid_edges,
         MAX_ATOMS,
+        spins_to_grid,
     )
 except ModuleNotFoundError:
     from python_demos.foundation.ising_four_models import (  # type: ignore
         IsingParams,
         model_1_heatmap_trajectory,
-        model_2_heatmap_trajectory,
+        model_2_magnetization_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
         model_5_heatmap_trajectory,
         grid_edges,
         MAX_ATOMS,
+        spins_to_grid,
     )
 
 
@@ -92,14 +94,14 @@ def main() -> None:
         model_frames["1"] = model_1_heatmap_trajectory(params=params, steps=args.steps, initial_spins=start, n_cols=args.cols)
         model_titles["1"] = "Model 1: Independent-spin lattice"
     if "2" in selected_models:
-        model_frames["2"] = model_2_heatmap_trajectory(
-            n_spins=n_atoms,
+        model2_magnetization = model_2_magnetization_trajectory(
             params=params,
             steps=args.steps,
-            n_rows=args.rows,
-            n_cols=args.cols,
-            initial_k_dist={sum(1 for s in start if s == 1): 1.0},
+            initial_magnetization=sum(start) / n_atoms,
         )
+        model_frames["2"] = [
+            spins_to_grid([magnetization] * n_atoms, n_cols=args.cols) for magnetization in model2_magnetization
+        ]
         model_titles["2"] = "Model 2: Mean-field lattice"
     if "3" in selected_models:
         model_frames["3"] = model_3_heatmap_trajectory(

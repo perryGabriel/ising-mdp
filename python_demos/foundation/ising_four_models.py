@@ -168,14 +168,10 @@ def model_1_heatmap_trajectory(
 # Model 2: mean-field model on K=#(up spins)
 # -----------------------------------------
 def model_2_mean_field(
-    n_spins: int,
     params: IsingParams,
-    current_k_dist: Dict[int, float],
-) -> Dict[int, float]:
-    """Advance mean-field distribution using a tanh update on mean magnetization.
-
-    The model evolves only the mean magnetization m_t, then projects the result
-    back to a narrow K distribution that preserves E[K].
+    current_magnetization: float,
+) -> float:
+    """Advance mean-field magnetization state by one step.
 
     If you are looking for the proposal equation written directly in terms of
     (J, T, h) and magnetization m_t, this is the corresponding implementation:
@@ -184,45 +180,38 @@ def model_2_mean_field(
     """
 
     beta = 1.0 / max(params.temperature * MODEL_2_TEMPERATURE_SCALE, 1e-6)
-    current_m = sum(((2 * k - n_spins) / n_spins) * p for k, p in current_k_dist.items())
-    next_m = math.tanh(beta * (params.coupling * current_m + params.field))
-
-    expected_k = (next_m * n_spins + n_spins) / 2.0
-    k_low = max(0, min(n_spins, int(math.floor(expected_k))))
-    k_high = max(0, min(n_spins, int(math.ceil(expected_k))))
-    if k_low == k_high:
-        return {k_low: 1.0}
-
-    frac = expected_k - k_low
-    return {k_low: 1.0 - frac, k_high: frac}
+    return math.tanh(beta * (params.coupling * current_magnetization + params.field))
 
 
 def model_2_heatmap_trajectory(
-    n_spins: int,
     params: IsingParams,
     steps: int,
-    n_rows: int | None = None,
-    n_cols: int | None = None,
-    initial_k_dist: Dict[int, float] | None = None,
+    n_rows: int = 2,
+    n_cols: int = 2,
+    initial_magnetization: float = 0.0,
 ) -> List[List[List[float]]]:
-    """Return model-2 heatmap frames (legacy strip or lattice view)."""
+    """Return model-2 heatmap frames by projecting scalar magnetization to a lattice."""
 
-    k_dist: Dict[int, float] = initial_k_dist if initial_k_dist is not None else {n_spins // 2: 1.0}
+    n_spins = n_rows * n_cols
+    trajectory = model_2_magnetization_trajectory(
+        params=params,
+        steps=steps,
+        initial_magnetization=initial_magnetization,
+    )
+    return [spins_to_grid([magnetization] * n_spins, n_cols=n_cols) for magnetization in trajectory]
 
-    def to_row(dist: Dict[int, float]) -> List[List[float]]:
-        return [[2.0 * dist.get(k, 0.0) - 1.0 for k in range(n_spins + 1)]]
 
-    def to_lattice(dist: Dict[int, float]) -> List[List[float]]:
-        exp_k = sum(k * p for k, p in dist.items())
-        magnetization = (2.0 * exp_k - n_spins) / n_spins
-        assert n_rows is not None and n_cols is not None
-        return spins_to_grid([magnetization] * (n_rows * n_cols), n_cols=n_cols)
+def model_2_magnetization_trajectory(
+    params: IsingParams,
+    steps: int,
+    initial_magnetization: float = 0.0,
+) -> List[float]:
+    """Return model-2 scalar magnetization trajectory."""
 
-    frames: List[List[List[float]]] = [to_lattice(k_dist) if n_rows is not None and n_cols is not None else to_row(k_dist)]
+    series: List[float] = [max(-1.0, min(1.0, initial_magnetization))]
     for _ in range(steps):
-        k_dist = model_2_mean_field(n_spins=n_spins, params=params, current_k_dist=k_dist)
-        frames.append(to_lattice(k_dist) if n_rows is not None and n_cols is not None else to_row(k_dist))
-    return frames
+        series.append(model_2_mean_field(params=params, current_magnetization=series[-1]))
+    return series
 
 
 # -------------------------------------------------
@@ -506,13 +495,11 @@ def demo(args: argparse.Namespace) -> None:
     print(state_probability_bars(m1_dist, top_k=2))
     print(f"Sampled next state: {render_lattice(sample_from_distribution(rng, m1_dist), 1)}")
 
-    print_model_header("Model 2: Mean-field chain over K=#(up spins)")
-    n_spins = args.mean_field_spins
-    k_dist = {n_spins // 2: 1.0}
+    print_model_header("Model 2: Mean-field scalar magnetization dynamics")
+    magnetization = 0.0
     for step in range(args.steps):
-        k_dist = model_2_mean_field(n_spins=n_spins, params=params, current_k_dist=k_dist)
-        top = sorted(k_dist.items(), key=lambda kv: kv[1], reverse=True)[:5]
-        print(f"Step {step + 1:2d}: " + ", ".join(f"K={k}: {p:.3f}" for k, p in top))
+        magnetization = model_2_mean_field(params=params, current_magnetization=magnetization)
+        print(f"Step {step + 1:2d}: m={magnetization:.3f}")
 
     print_model_header("Model 3: Local-neighborhood probability model (2x2 lattice)")
     probs = [0.8, 0.2, 0.5, 0.1]
