@@ -108,7 +108,7 @@ This also writes `artifacts/metrics/magnetization_summary_metrics.csv` containin
 Plot one-at-a-time sweeps as a `k x 3` grid (columns: sweep `T`, sweep `h`, sweep `J`; each subplot overlays model_1 and surrogate curves, with trajectory RMSE vs model_1 in legend labels):
 
 ```bash
-python .\python_demos\stage3_analyze\plot_one_at_a_time_sweeps.py --artifact-prefix artifacts --num-base-points 3 --output artifacts/plots/magnetization_one_at_a_time_sweeps.png
+python .\python_demos\stage3_analyze\plot_one_at_a_time_sweeps.py --artifact-prefix artifacts --num-base-points 5 --output artifacts/plots/magnetization_one_at_a_time_sweeps.png
 ```
 
 ## Trajectory matching visualization
