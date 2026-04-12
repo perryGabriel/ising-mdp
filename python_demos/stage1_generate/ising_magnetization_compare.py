@@ -151,7 +151,7 @@ def trajectory_magnetizations(
     return trajectories, runtimes, up_count, up_fraction
 
 
-def write_raw(path: Path, rows: Iterable[Dict[str, float]]) -> None:
+def write_raw(path: Path, rows: Iterable[Dict[str, str | float | int]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
         "model",
@@ -172,7 +172,7 @@ def write_raw(path: Path, rows: Iterable[Dict[str, float]]) -> None:
             writer.writerow(row)
 
 
-def write_summary(path: Path, raw_rows: Sequence[Dict[str, float]]) -> None:
+def write_summary(path: Path, raw_rows: Sequence[Dict[str, str | float | int]]) -> None:
     grouped: Dict[Tuple[str, float, float, float, int], List[float]] = defaultdict(list)
     for row in raw_rows:
         key = (
@@ -235,7 +235,7 @@ def main() -> None:
     h_values = linspace(args.h_min, args.h_max, args.h_count)
     temp_values = linspace(args.temp_min, args.temp_max, args.temp_count)
 
-    raw_rows: List[Dict[str, float]] = []
+    raw_rows: List[Dict[str, str | float | int]] = []
     total_jobs = len(j_values) * len(h_values) * len(temp_values) * args.seeds
     job_idx = 0
 

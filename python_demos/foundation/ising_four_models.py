@@ -214,7 +214,7 @@ def model_2_magnetization_trajectory(
     return series
 
 
-def model_2_magnetization_trajectory(
+def model_2_magnetization_trajectory_old(
     n_spins: int,
     params: IsingParams,
     steps: int,
@@ -230,8 +230,8 @@ def model_2_magnetization_trajectory(
 
     series: List[float] = [magnetization(k_dist)]
     for _ in range(steps):
-        k_dist = model_2_mean_field(n_spins=n_spins, params=params, current_k_dist=k_dist)
-        series.append(magnetization(k_dist))
+        m = model_2_mean_field(params=params, current_magnetization=series[-1])
+        series.append(m)
     return series
 
 
