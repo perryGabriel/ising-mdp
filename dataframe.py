@@ -1,11 +1,17 @@
 import pandas as pd
 
-# df = pd.read_csv('artifacts/data/raw/magnetization_timeseries.csv')
-# print(df.head())
+
+# python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
+# python .\python_demos\stage3_analyze\plot_summary_magnetization_grid.py --artifact-prefix artifacts --output artifacts/plots/magnetization_summary_grid.png
+# python .\python_demos\stage3_analyze\plot_one_at_a_time_sweeps.py --artifact-prefix artifacts --num-base-points 5 --output artifacts/plots/magnetization_one_at_a_time_sweeps.png
+# python dataframe.py 
+
+df = pd.read_csv('artifacts/data/raw/magnetization_timeseries.csv')
+print(df.head())
 
 # group by model, output average runtime_seconds
-# grouped = df.groupby(['model'])['runtime_seconds'].mean().reset_index()
-# print(grouped)
+grouped = df.groupby(['model'])['runtime_seconds'].mean().reset_index()
+print(grouped)
 
 # model,coupling,field,temperature,
 # runtime_seconds,runtime_ratio_vs_model_1,transient_rmse_vs_model_1,

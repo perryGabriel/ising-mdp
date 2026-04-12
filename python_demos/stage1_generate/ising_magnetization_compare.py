@@ -47,8 +47,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build magnetization comparison datasets across selected models.")
     parser.add_argument("--rows", type=int, default=2, help="Number of grid rows (atoms)")
     parser.add_argument("--cols", type=int, default=3, help="Number of grid columns (atoms)")
-    parser.add_argument("--steps", type=int, default=20, help="Number of time steps")
-    parser.add_argument("--seeds", type=int, default=20, help="Number of seeded initializations per parameter point")
+    parser.add_argument("--steps", type=int, default=10, help="Number of time steps")
+    parser.add_argument("--seeds", type=int, default=10, help="Number of seeded initializations per parameter point")
 
     parser.add_argument("--j-min", type=float, default=0.1, help="Min coupling strength J")
     parser.add_argument("--j-max", type=float, default=1.0, help="Max coupling strength J")

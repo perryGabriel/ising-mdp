@@ -214,6 +214,27 @@ def model_2_magnetization_trajectory(
     return series
 
 
+def model_2_magnetization_trajectory(
+    n_spins: int,
+    params: IsingParams,
+    steps: int,
+    initial_k_dist: Dict[int, float] | None = None,
+) -> List[float]:
+    """Return model-2 magnetization trajectory without lattice materialization."""
+
+    k_dist: Dict[int, float] = initial_k_dist if initial_k_dist is not None else {n_spins // 2: 1.0}
+
+    def magnetization(dist: Dict[int, float]) -> float:
+        exp_k = sum(k * p for k, p in dist.items())
+        return (2.0 * exp_k - n_spins) / n_spins
+
+    series: List[float] = [magnetization(k_dist)]
+    for _ in range(steps):
+        k_dist = model_2_mean_field(n_spins=n_spins, params=params, current_k_dist=k_dist)
+        series.append(magnetization(k_dist))
+    return series
+
+
 # -------------------------------------------------
 # Model 3: local-neighborhood probability evolution
 # -------------------------------------------------
