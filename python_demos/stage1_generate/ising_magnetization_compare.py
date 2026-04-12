@@ -25,7 +25,7 @@ try:
         grid_edges,
         MAX_ATOMS,
         model_1_heatmap_trajectory,
-        model_2_heatmap_trajectory,
+        model_2_magnetization_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
         model_5_heatmap_trajectory,
@@ -36,7 +36,7 @@ except ModuleNotFoundError:
         grid_edges,
         MAX_ATOMS,
         model_1_heatmap_trajectory,
-        model_2_heatmap_trajectory,
+        model_2_magnetization_trajectory,
         model_3_heatmap_trajectory,
         model_4_heatmap_trajectory,
         model_5_heatmap_trajectory,
@@ -110,16 +110,14 @@ def trajectory_magnetizations(
         trajectories["model_1"] = [mean_grid_value(frame) for frame in model1]
         runtimes["model_1"] = time.perf_counter() - started
     if "2" in selected_models:
+        initial_k_dist = {sum(1 for s in start if s == 1): 1.0}
         started = time.perf_counter()
-        model2 = model_2_heatmap_trajectory(
+        trajectories["model_2"] = model_2_magnetization_trajectory(
             n_spins=n_atoms,
             params=params,
             steps=steps,
-            n_rows=rows,
-            n_cols=cols,
-            initial_k_dist={sum(1 for s in start if s == 1): 1.0},
+            initial_k_dist=initial_k_dist,
         )
-        trajectories["model_2"] = [mean_grid_value(frame) for frame in model2]
         runtimes["model_2"] = time.perf_counter() - started
     if "3" in selected_models:
         started = time.perf_counter()
